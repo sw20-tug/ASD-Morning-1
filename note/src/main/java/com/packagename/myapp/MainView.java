@@ -40,31 +40,26 @@ public class MainView extends VerticalLayout {
      *
      * @param service The message service. Automatically injected Spring managed bean.
      */
-    public MainView(@Autowired GreetService service) {
-
-        // Use TextField for standard text input
-        TextField textField_filename = new TextField("Enter filename");
-        TextField textField = new TextField("Test");
-
-        // Button click listeners can be defined as lambda expressions
-        Button button = new Button("Say hello",
-                e -> Notification.show(service.greet(textField.getValue())));
-
-        Button button_save = new Button("Save");
-
-        // Theme variants give you predefined extra styles for components.
-        // Example: Primary button is more prominent look.
-        button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        // You can specify keyboard shortcuts for buttons.
-        // Example: Pressing enter in this view clicks the Button.
-        button.addClickShortcut(Key.ENTER);
+    public MainView(@Autowired PushNotification service) {
 
         // Text area for the note
-          TextArea textArea = new TextArea("Note");
-          textArea.getStyle().set("minHeight,", "1000px");
-          textArea.getStyle().set("minWidth", "300px");
-          textArea.setPlaceholder("Write here...");
+        TextArea textArea = new TextArea("Note");
+        textArea.getStyle().set("minHeight,", "1000px");
+        textArea.getStyle().set("minWidth", "300px");
+        textArea.setPlaceholder("Write here...");
+
+        //String text = textArea.getValue();
+
+        // Use TextField for standard text input
+        TextField textField_filename = new TextField("Enter name of your note:");
+
+        Button button_save = new Button("Save note",
+                e -> Notification.show(service.save(textField_filename.getValue(), textArea.getValue())));
+
+        button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        //button_save.addClickShortcut(Key.ENTER);
+
 
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
