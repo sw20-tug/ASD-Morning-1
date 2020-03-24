@@ -13,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class LoadStore {
 
-    public static void saveToDatabase(String filename, String text) {
+    public static void saveToDatabase(String filename, String text)
+    {
         System.out.println(text);
     }
 }
