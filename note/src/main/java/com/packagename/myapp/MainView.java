@@ -1,6 +1,10 @@
 package com.packagename.myapp;
 
+import com.packagename.myapp.controller.NoteController;
+import com.packagename.myapp.entity.Note;
+import com.packagename.myapp.notes.NoteInterface;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -11,6 +15,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.swing.*;
+import java.util.List;
 
 /**
  * A sample Vaadin view class.
@@ -33,20 +40,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
 
-    /**
-     * Construct a new Vaadin view.
-     * <p>
-     * Build the initial UI state for the user accessing the application.
-     *
-     * @param service The message service. Automatically injected Spring managed bean.
-     */
+    @Autowired
+    NoteInterface noteInterface;
+
+    NoteController noteController = new NoteController();
+
     public MainView(@Autowired PushNotification service) {
+
+        NotesLayout notesLayout = new NotesLayout();
+
+        List<Note> test = noteController.getNotes();
+
+
 
         // Text area for the note
         TextArea textArea = new TextArea("Note");
         textArea.getStyle().set("minHeight,", "1000px");
         textArea.getStyle().set("minWidth", "300px");
-        textArea.setPlaceholder("Write here...");
+        textArea.setPlaceholder(test.get(0).getText_());
 
         //String text = textArea.getValue();
 
@@ -65,7 +76,7 @@ public class MainView extends VerticalLayout {
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
 
-        add(textField_filename, button_save, textArea);
+        add(textField_filename, button_save, textArea, notesLayout);
     }
 
 }

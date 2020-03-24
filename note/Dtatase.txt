@@ -8,7 +8,11 @@ sudo systemctl start mysql
 Go into database:
 sudo /usr/bin/mysql -u root -p
 
+Create database:
 
-INSERT INTO notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
+CREATE DATABASE notedb;
 
-CREATE TABLE notes (ID int NOT NULL AUTO_INCREMENT, title varchar(255), text varchar(255), PRIMARY KEY (ID));
+For testing you could add:
+
+INSERT INTO com.packagename.myapp.notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
+
