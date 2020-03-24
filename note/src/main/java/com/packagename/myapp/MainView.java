@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
@@ -42,11 +43,14 @@ public class MainView extends VerticalLayout {
     public MainView(@Autowired GreetService service) {
 
         // Use TextField for standard text input
-        TextField textField = new TextField("Your name");
+        TextField textField_filename = new TextField("Enter filename");
+        TextField textField = new TextField("Test");
 
         // Button click listeners can be defined as lambda expressions
         Button button = new Button("Say hello",
                 e -> Notification.show(service.greet(textField.getValue())));
+
+        Button button_save = new Button("Save");
 
         // Theme variants give you predefined extra styles for components.
         // Example: Primary button is more prominent look.
@@ -56,10 +60,17 @@ public class MainView extends VerticalLayout {
         // Example: Pressing enter in this view clicks the Button.
         button.addClickShortcut(Key.ENTER);
 
+        // Text area for the note
+          TextArea textArea = new TextArea("Note");
+          textArea.getStyle().set("minHeight,", "1000px");
+          textArea.getStyle().set("minWidth", "300px");
+          textArea.setPlaceholder("Write here...");
+
+
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
 
-        add(textField, button);
+        add(textField_filename, button_save, textArea);
     }
 
 }
