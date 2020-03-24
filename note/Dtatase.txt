@@ -1,0 +1,14 @@
+Install:
+sudo apt-get update
+sudo apt-get install mysql-server
+
+Start:
+sudo systemctl start mysql
+
+Go into database:
+sudo /usr/bin/mysql -u root -p
+
+
+INSERT INTO notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
+
+CREATE TABLE notes (ID int NOT NULL AUTO_INCREMENT, title varchar(255), text varchar(255), PRIMARY KEY (ID));
