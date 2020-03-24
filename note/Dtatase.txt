@@ -14,5 +14,5 @@ CREATE DATABASE notedb;
 
 For testing you could add:
 
-INSERT INTO com.packagename.myapp.notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
+INSERT INTO notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
 
