@@ -1,10 +1,19 @@
 package com.packagename.myapp;
 
+import com.packagename.myapp.controller.NoteController;
+import com.packagename.myapp.entity.Note;
+import com.packagename.myapp.notes.NoteInterface;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -12,55 +21,43 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * A sample Vaadin view class.
- * <p>
- * To implement a Vaadin view just extend any Vaadin component and
- * use @Route annotation to announce it in a URL as a Spring managed
- * bean.
- * Use the @PWA annotation make the application installable on phones,
- * tablets and some desktop browsers.
- * <p>
- * A new instance of this class is created for every new user and every
- * browser tab/window.
- */
+import javax.swing.*;
+import java.util.List;
+
+
+import java.awt.*;
+
 @Route
-@PWA(name = "Vaadin Application",
-        shortName = "Vaadin App",
-        description = "This is an example Vaadin application.",
+@PWA(name = "Notes App",
+        shortName = "Notes App",
+        description = "Take Notes.",
         enableInstallPrompt = true)
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
 
-    /**
-     * Construct a new Vaadin view.
-     * <p>
-     * Build the initial UI state for the user accessing the application.
-     *
-     * @param service The message service. Automatically injected Spring managed bean.
-     */
-    public MainView(@Autowired PushNotification service) {
+    public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface) {
+        addInput(service, noteInterface);
+        addNotes(noteInterface);
+    }
 
-        // Text area for the note
-        TextArea textArea = new TextArea("Note");
+    private void addInput(PushNotification service, NoteInterface noteInterface) {
+        // Use TextField for standard text input
+        TextArea textArea = new TextArea();
+        textArea.setPlaceholder("Write here...");
         textArea.getStyle().set("minHeight,", "1000px");
         textArea.getStyle().set("minWidth", "300px");
-        textArea.setPlaceholder("Write here...");
 
-        //String text = textArea.getValue();
-
-        // Use TextField for standard text input
         TextField textField_filename = new TextField("Enter name of your note:");
-
+/*
         Button button_save = new Button("Save note",
                 e -> Notification.show(service.save(textField_filename.getValue(), textArea.getValue())));
+*/
+
+        Button button_save = new Button("Save note",
+                e -> saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface));
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        //button_save.addClickShortcut(Key.ENTER);
-
-
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
@@ -68,4 +65,94 @@ public class MainView extends VerticalLayout {
         add(textField_filename, button_save, textArea);
     }
 
+    /**
+     * Loads the List with all notes.
+     */
+    private void addNotes(NoteInterface noteInterface) {
+
+        List<Note> notes = noteInterface.findAll();
+
+        notes.forEach(note -> {
+            Note(note, noteInterface);
+        });
+
+
+    }
+
+    private void Note(Note note, NoteInterface noteInterface) {
+        //this will be displayed;
+
+
+
+        /*JButton button = new JButton("edit");
+
+        JPanel panel = new JPanel();
+        panel.setOpaque(true);
+        panel.add(button);
+
+
+        JFrame frame = new JFrame(note.getTitle_());
+
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setContentPane(panel);
+        frame.pack();
+        frame.setVisible(true);
+
+
+
+        JTextArea textArea = new JTextArea(note.getTitle_());
+        textArea.setText(note.getText_());
+        textArea.setEditable(false);
+*/
+
+        Div div = new Div();
+        Button button = new Button("Edit");
+
+        TextField textField = new TextField(note.getTitle_());
+        textField.setValue(note.getText_());
+        textField.getStyle().set("minHeight,", "1000px");
+        textField.getStyle().set("minWidth", "300px");
+        textField.setReadOnly(true);
+
+        div.add(textField, button);
+
+        Dialog dialog = new Dialog();
+
+        Button save = new Button("Save");
+
+        TextArea textArea = new TextArea(note.getTitle_());
+        textArea.setValue(note.getText_());
+        textArea.setHeight("450px");
+        textArea.setWidth("1000px");
+
+        button.addClickListener(event -> {
+            dialog.open();
+            dialog.setWidth("1000px");
+            dialog.setHeight("500px");
+            dialog.add(textArea);
+            dialog.add(save);
+
+            save.addClickListener(eventSave -> {
+                dialog.close();
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_());
+                textField.setValue(textArea.getValue());
+
+            });
+
+        });
+
+
+        add(div);
+    }
+
+    public void saveToDatabase(String filename, String text, NoteInterface notes)
+    {
+        Note note = new Note();
+        note.setTitle_(filename);
+        note.setText_(text);
+
+        notes.save(note);
+
+
+    }
 }
