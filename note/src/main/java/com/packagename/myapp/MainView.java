@@ -56,15 +56,19 @@ public class MainView extends VerticalLayout {
 
         List<Note> notes = noteInterface.findAll();
 
-        notes.forEach(note -> {
-            TextArea textArea = new TextArea(note.getTitle_());
-            textArea.setPlaceholder(note.getText_());
-            textArea.getStyle().set("minHeight,", "1000px");
-            textArea.getStyle().set("minWidth", "300px");
+        notes.forEach(this::Note);
 
-            add(textArea);
-        });
+    }
 
+    private void Note(Note note) {
+        //this will be displayed;
+
+        TextArea textArea = new TextArea(note.getTitle_());
+        textArea.setPlaceholder(note.getText_());
+        textArea.getStyle().set("minHeight,", "1000px");
+        textArea.getStyle().set("minWidth", "300px");
+
+        add(textArea);
     }
 
 

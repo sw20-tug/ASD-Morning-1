@@ -16,3 +16,4 @@ For testing you could add:
 
 INSERT INTO notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')
 
+
