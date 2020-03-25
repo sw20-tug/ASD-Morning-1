@@ -5,10 +5,12 @@ import com.packagename.myapp.entity.Note;
 import com.packagename.myapp.notes.NoteInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 
@@ -27,4 +29,5 @@ public class NoteController {
     public List<Note> getNotes() {
         return noteInterface.findAll();
     }
+
 }

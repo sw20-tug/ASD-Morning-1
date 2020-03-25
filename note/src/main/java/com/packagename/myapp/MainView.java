@@ -9,6 +9,9 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -20,6 +23,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.swing.*;
 import java.util.List;
+
+
+import java.awt.*;
 
 @Route
 @PWA(name = "Notes App",
@@ -66,19 +72,77 @@ public class MainView extends VerticalLayout {
 
         List<Note> notes = noteInterface.findAll();
 
-        notes.forEach(this::Note);
+        notes.forEach(note -> {
+            Note(note, noteInterface);
+        });
+
 
     }
 
-    private void Note(Note note) {
+    private void Note(Note note, NoteInterface noteInterface) {
         //this will be displayed;
 
-        TextArea textArea = new TextArea(note.getTitle_());
-        textArea.setPlaceholder(note.getText_());
-        textArea.getStyle().set("minHeight,", "1000px");
-        textArea.getStyle().set("minWidth", "300px");
 
-        add(textArea);
+
+        /*JButton button = new JButton("edit");
+
+        JPanel panel = new JPanel();
+        panel.setOpaque(true);
+        panel.add(button);
+
+
+        JFrame frame = new JFrame(note.getTitle_());
+
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setContentPane(panel);
+        frame.pack();
+        frame.setVisible(true);
+
+
+
+        JTextArea textArea = new JTextArea(note.getTitle_());
+        textArea.setText(note.getText_());
+        textArea.setEditable(false);
+*/
+
+        Div div = new Div();
+        Button button = new Button("Edit");
+
+        TextField textField = new TextField(note.getTitle_());
+        textField.setValue(note.getText_());
+        textField.getStyle().set("minHeight,", "1000px");
+        textField.getStyle().set("minWidth", "300px");
+        textField.setReadOnly(true);
+
+        div.add(textField, button);
+
+        Dialog dialog = new Dialog();
+
+        Button save = new Button("Save");
+
+        TextArea textArea = new TextArea(note.getTitle_());
+        textArea.setValue(note.getText_());
+        textArea.setHeight("450px");
+        textArea.setWidth("1000px");
+
+        button.addClickListener(event -> {
+            dialog.open();
+            dialog.setWidth("1000px");
+            dialog.setHeight("500px");
+            dialog.add(textArea);
+            dialog.add(save);
+
+            save.addClickListener(eventSave -> {
+                dialog.close();
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_());
+                textField.setValue(textArea.getValue());
+
+            });
+
+        });
+
+
+        add(div);
     }
 
     public void saveToDatabase(String filename, String text, NoteInterface notes)
