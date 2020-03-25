@@ -20,7 +20,7 @@ public class PushNotification implements Serializable {
         if (name == null || name.isEmpty()) {
             return "Please enter a filename";
         } else {
-            LoadStore.saveToDatabase(name, text);
+            //LoadStore.saveToDatabase(name, text);
             return "stored as: " + name;
         }
     }
