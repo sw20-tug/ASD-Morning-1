@@ -31,22 +31,32 @@ import java.util.List;
 public class MainView extends VerticalLayout {
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface) {
-        addInput();
+        addInput(service, noteInterface);
         addNotes(noteInterface);
     }
 
-    private void addInput() {
+    private void addInput(PushNotification service, NoteInterface noteInterface) {
         // Use TextField for standard text input
-        TextField textField_filename = new TextField("Enter name of your note:");
+        TextArea textArea = new TextArea();
+        textArea.setPlaceholder("Write here...");
+        textArea.getStyle().set("minHeight,", "1000px");
+        textArea.getStyle().set("minWidth", "300px");
 
-        Button button_save = new Button("Save note");
+        TextField textField_filename = new TextField("Enter name of your note:");
+/*
+        Button button_save = new Button("Save note",
+                e -> Notification.show(service.save(textField_filename.getValue(), textArea.getValue())));
+*/
+
+        Button button_save = new Button("Save note",
+                e -> saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface));
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
 
-        add(textField_filename, button_save);
+        add(textField_filename, button_save, textArea);
     }
 
     /**
@@ -71,5 +81,14 @@ public class MainView extends VerticalLayout {
         add(textArea);
     }
 
+    public void saveToDatabase(String filename, String text, NoteInterface notes)
+    {
+        Note note = new Note();
+        note.setTitle_(filename);
+        note.setText_(text);
 
+        notes.save(note);
+
+
+    }
 }
