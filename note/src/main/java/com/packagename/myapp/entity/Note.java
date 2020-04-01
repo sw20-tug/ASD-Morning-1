@@ -17,6 +17,9 @@ public class Note
 
     private String text;
 
+    @NotNull
+    private Boolean done;
+
     public Note()
     {
     }
@@ -25,6 +28,7 @@ public class Note
     {
         this.title = title;
         this.text = text;
+        this.done = false;
     }
 
     public Integer getId_()
@@ -55,5 +59,13 @@ public class Note
     public void setText_(String text_)
     {
         this.text = text_;
+    }
+
+    public Boolean getDone_() {
+        return done;
+    }
+
+    public void setDone_(Boolean done) {
+        this.done = done;
     }
 }
