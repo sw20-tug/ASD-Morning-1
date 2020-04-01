@@ -8,6 +8,7 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
@@ -38,53 +39,101 @@ import java.awt.*;
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
+    static boolean show_unfinished = true;
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface) {
+
         addInput(service, noteInterface);
-        addNotes(noteInterface);
+        if(show_unfinished)
+        {
+            showunfinishedNotes(noteInterface);
+        }
+        else{
+            showfinishedNotes(noteInterface);
+        }
     }
 
     private void addInput(PushNotification service, NoteInterface noteInterface) {
         // Use TextField for standard text input
+        Button changeview_button = new Button();
         TextArea textArea = new TextArea();
         textArea.setPlaceholder("Write here...");
         textArea.getStyle().set("minHeight,", "1000px");
         textArea.getStyle().set("minWidth", "300px");
 
         TextField textField_filename = new TextField("Enter name of your note:");
-/*
-        Button button_save = new Button("Save note",
-                e -> Notification.show(service.save(textField_filename.getValue(), textArea.getValue())));
-*/
 
-        Button button_save = new Button("Save note",
-                e -> saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface));
+        Button button_save = new Button("Save note");
+
+        button_save.addClickListener(event->{
+            saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface);
+            UI.getCurrent().getPage().reload();
+        });
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        button_save.addClassName("button");
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
+        if(show_unfinished)
+        {
+            changeview_button.setText("Show finished tasks");
+        }
+        else{
+            changeview_button.setText("Show unfinished tasks");
+        }
+        changeview_button.addClickListener(event->{
 
-        add(textField_filename, button_save, textArea);
+            if(show_unfinished)
+            {
+                show_unfinished = false;
+            }
+            else{
+                show_unfinished = true;
+            }
+            UI.getCurrent().getPage().reload();
+        });
+
+
+        add(textField_filename, textArea, button_save, changeview_button);
     }
 
     /**
      * Loads the List with all notes.
      */
-    private void addNotes(NoteInterface noteInterface) {
+    private void showunfinishedNotes(NoteInterface noteInterface) {
 
         List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
 
         notes.forEach(note -> {
-            Note(note, noteInterface);
+            if(note.getDone_()==false)
+            {
+                Note(note, noteInterface);
+
+            }
         });
     }
+    private void showfinishedNotes(NoteInterface noteInterface) {
+
+        List<Note> notes = noteInterface.findAll();
+
+        notes.forEach(note -> {
+            if(note.getDone_())
+            {
+                Note(note, noteInterface);
+            }
+        });
+
+
+    }
+
 
     private void Note(Note note, NoteInterface noteInterface) {
-        //this will be displayed;
-
         Div div = new Div();
         Button button = new Button("Edit");
+        Button delete_button = new Button("Delete");
+        delete_button.addClassName("delete_button");
+        button.addClassName("button");
 
         Icon icon = new Icon(VaadinIcon.PIN);
         Button pin = new Button(icon);
@@ -93,16 +142,21 @@ public class MainView extends VerticalLayout {
         textField.setValue(note.getText_());
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
+        Checkbox done = new Checkbox("Done");
+
         textField.setReadOnly(true);
 
+        div.add(textField, button, delete_button, done, pin);
         Dialog dialog = new Dialog();
 
         Button save = new Button("Save");
+
 
         TextArea textArea = new TextArea(note.getTitle_());
         textArea.setValue(note.getText_());
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
+
 
         Notification notification = new Notification(
                 "Pinned note", 3000);
@@ -112,6 +166,12 @@ public class MainView extends VerticalLayout {
             noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
             notification.open();
             UI.getCurrent().getPage().reload();
+
+        done.setValue(note.getDone_());
+        done.addClickListener(event -> {
+           note.setDone_(!note.getDone_());
+           noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getDone_());
+
         });
 
         button.addClickListener(event -> {
@@ -123,27 +183,27 @@ public class MainView extends VerticalLayout {
 
             save.addClickListener(eventSave -> {
                 dialog.close();
-                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_());
                 textField.setValue(textArea.getValue());
 
             });
 
         });
 
-        div.add(textField, button, pin);
+
+        delete_button.addClickListener(event -> {
+            noteInterface.deleteById(note.getId_());
+            UI.getCurrent().getPage().reload();
+        });
+            add(div);
 
 
-        add(div);
     }
 
     public void saveToDatabase(String filename, String text, NoteInterface notes)
     {
-        Note note = new Note();
-        note.setTitle_(filename);
-        note.setText_(text);
-
+        Note note = new Note(filename, text);
         notes.save(note);
-
-
     }
 }
+
