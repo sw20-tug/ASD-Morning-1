@@ -17,6 +17,9 @@ public class Note
 
     private String text;
 
+    @NotNull
+    private Boolean pinned = false;
+
     public Note()
     {
     }
@@ -55,5 +58,13 @@ public class Note
     public void setText_(String text_)
     {
         this.text = text_;
+    }
+
+    public Boolean getPinned() {
+        return pinned;
+    }
+
+    public void setPinned(Boolean pinned) {
+        this.pinned = pinned;
     }
 }

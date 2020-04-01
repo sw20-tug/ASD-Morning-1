@@ -12,6 +12,8 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -20,8 +22,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 
-import javax.swing.*;
+
 import java.util.List;
 
 
@@ -70,51 +73,27 @@ public class MainView extends VerticalLayout {
      */
     private void addNotes(NoteInterface noteInterface) {
 
-        List<Note> notes = noteInterface.findAll();
+        List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
 
         notes.forEach(note -> {
             Note(note, noteInterface);
         });
-
-
     }
 
     private void Note(Note note, NoteInterface noteInterface) {
         //this will be displayed;
 
-
-
-        /*JButton button = new JButton("edit");
-
-        JPanel panel = new JPanel();
-        panel.setOpaque(true);
-        panel.add(button);
-
-
-        JFrame frame = new JFrame(note.getTitle_());
-
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setContentPane(panel);
-        frame.pack();
-        frame.setVisible(true);
-
-
-
-        JTextArea textArea = new JTextArea(note.getTitle_());
-        textArea.setText(note.getText_());
-        textArea.setEditable(false);
-*/
-
         Div div = new Div();
         Button button = new Button("Edit");
+
+        Icon icon = new Icon(VaadinIcon.PIN);
+        Button pin = new Button(icon);
 
         TextField textField = new TextField(note.getTitle_());
         textField.setValue(note.getText_());
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
         textField.setReadOnly(true);
-
-        div.add(textField, button);
 
         Dialog dialog = new Dialog();
 
@@ -125,6 +104,16 @@ public class MainView extends VerticalLayout {
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
 
+        Notification notification = new Notification(
+                "Pinned note", 3000);
+
+        pin.addClickListener(clicked -> {
+            note.setPinned(!note.getPinned());
+            noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
+            notification.open();
+            UI.getCurrent().getPage().reload();
+        });
+
         button.addClickListener(event -> {
             dialog.open();
             dialog.setWidth("1000px");
@@ -134,12 +123,14 @@ public class MainView extends VerticalLayout {
 
             save.addClickListener(eventSave -> {
                 dialog.close();
-                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_());
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
                 textField.setValue(textArea.getValue());
 
             });
 
         });
+
+        div.add(textField, button, pin);
 
 
         add(div);

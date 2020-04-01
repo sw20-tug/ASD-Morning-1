@@ -12,6 +12,10 @@ Create database:
 
 CREATE DATABASE notedb;
 
+Aso do:
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password'
+
+
 For testing you could add:
 
 INSERT INTO notes (title, text) VALUES ('Test Note', 'Your Notes will look like this')

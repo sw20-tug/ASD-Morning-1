@@ -12,6 +12,6 @@ public interface NoteInterface extends JpaRepository<Note, Integer> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Note n SET n.text = ?2, n.title =?3 where n.ID = ?1")
-    Integer updateNotes(Integer id, String text, String title);
+    @Query("UPDATE Note n SET n.text = ?2, n.title =?3, n.pinned =?4 where n.ID = ?1")
+    Integer updateNotes(Integer id, String text, String title, Boolean pinned);
 }
