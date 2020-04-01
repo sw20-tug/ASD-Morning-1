@@ -18,7 +18,10 @@ public class Note
     private String text;
 
     @NotNull
+    private Boolean pinned;
+
     private Boolean done;
+
 
     public Note()
     {
@@ -29,6 +32,7 @@ public class Note
         this.title = title;
         this.text = text;
         this.done = false;
+        this.pinned = false;
     }
 
     public Integer getId_()
@@ -61,11 +65,20 @@ public class Note
         this.text = text_;
     }
 
+
+    public Boolean getPinned() {
+        return pinned;
+    }
+
+    public void setPinned(Boolean pinned) {
+        this.pinned = pinned;
+
     public Boolean getDone_() {
         return done;
     }
 
     public void setDone_(Boolean done) {
         this.done = done;
+
     }
 }

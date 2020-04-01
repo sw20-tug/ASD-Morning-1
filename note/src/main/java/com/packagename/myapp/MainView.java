@@ -13,6 +13,8 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -21,8 +23,9 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 
-import javax.swing.*;
+
 import java.util.List;
 
 
@@ -100,7 +103,7 @@ public class MainView extends VerticalLayout {
      */
     private void showunfinishedNotes(NoteInterface noteInterface) {
 
-        List<Note> notes = noteInterface.findAll();
+        List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
 
         notes.forEach(note -> {
             if(note.getDone_()==false)
@@ -109,8 +112,6 @@ public class MainView extends VerticalLayout {
 
             }
         });
-
-
     }
     private void showfinishedNotes(NoteInterface noteInterface) {
 
@@ -134,6 +135,9 @@ public class MainView extends VerticalLayout {
         delete_button.addClassName("delete_button");
         button.addClassName("button");
 
+        Icon icon = new Icon(VaadinIcon.PIN);
+        Button pin = new Button(icon);
+
         TextField textField = new TextField(note.getTitle_());
         textField.setValue(note.getText_());
         textField.getStyle().set("minHeight,", "1000px");
@@ -142,8 +146,7 @@ public class MainView extends VerticalLayout {
 
         textField.setReadOnly(true);
 
-        div.add(textField, button, delete_button, done);
-
+        div.add(textField, button, delete_button, done, pin);
         Dialog dialog = new Dialog();
 
         Button save = new Button("Save");
@@ -154,10 +157,21 @@ public class MainView extends VerticalLayout {
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
 
+
+        Notification notification = new Notification(
+                "Pinned note", 3000);
+
+        pin.addClickListener(clicked -> {
+            note.setPinned(!note.getPinned());
+            noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
+            notification.open();
+            UI.getCurrent().getPage().reload();
+
         done.setValue(note.getDone_());
         done.addClickListener(event -> {
            note.setDone_(!note.getDone_());
            noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getDone_());
+
         });
 
         button.addClickListener(event -> {
@@ -169,12 +183,13 @@ public class MainView extends VerticalLayout {
 
             save.addClickListener(eventSave -> {
                 dialog.close();
-                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getDone_());
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_());
                 textField.setValue(textArea.getValue());
 
             });
 
         });
+
 
         delete_button.addClickListener(event -> {
             noteInterface.deleteById(note.getId_());
