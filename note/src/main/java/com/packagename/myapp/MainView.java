@@ -58,6 +58,7 @@ public class MainView extends VerticalLayout {
                 e -> saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface));
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        button_save.addClassName("button");
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
@@ -152,7 +153,5 @@ public class MainView extends VerticalLayout {
         note.setText_(text);
 
         notes.save(note);
-
-
     }
 }
