@@ -56,15 +56,13 @@ public class MainView extends VerticalLayout {
 
         Button button_save = new Button("Save note",
                 e -> saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface));
-        button_save.addClickListener(event -> {
-            UI.getCurrent().getPage().reload();
-        });
+
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
 
-        add(textField_filename, textArea, button_save);
+        add(textField_filename, button_save, textArea);
     }
 
     /**
@@ -82,13 +80,33 @@ public class MainView extends VerticalLayout {
     }
 
     private void Note(Note note, NoteInterface noteInterface) {
+        //this will be displayed;
 
+
+
+        /*JButton button = new JButton("edit");
+
+        JPanel panel = new JPanel();
+        panel.setOpaque(true);
+        panel.add(button);
+
+
+        JFrame frame = new JFrame(note.getTitle_());
+
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setContentPane(panel);
+        frame.pack();
+        frame.setVisible(true);
+
+
+
+        JTextArea textArea = new JTextArea(note.getTitle_());
+        textArea.setText(note.getText_());
+        textArea.setEditable(false);
+*/
 
         Div div = new Div();
         Button button = new Button("Edit");
-        Button delete_button = new Button("Delete");
-        delete_button.addClassName("delete_button");
-        button.addClassName("button");
 
         TextField textField = new TextField(note.getTitle_());
         textField.setValue(note.getText_());
@@ -96,7 +114,7 @@ public class MainView extends VerticalLayout {
         textField.getStyle().set("minWidth", "300px");
         textField.setReadOnly(true);
 
-        div.add(textField, button, delete_button);
+        div.add(textField, button);
 
         Dialog dialog = new Dialog();
 
@@ -121,11 +139,6 @@ public class MainView extends VerticalLayout {
 
             });
 
-        });
-
-        delete_button.addClickListener(event -> {
-            noteInterface.deleteById(note.getId_());
-            UI.getCurrent().getPage().reload();
         });
 
 
