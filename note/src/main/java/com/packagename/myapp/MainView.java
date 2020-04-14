@@ -12,10 +12,14 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -24,14 +28,11 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
-import com.vaadin.flow.component.combobox.ComboBox;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.vaadin.gatanaso.MultiselectComboBox;
 
 
-
-
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,14 +49,23 @@ import java.util.Set;
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
+    static boolean show_unfinished = true;
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
+
         addInput(service, noteInterface, categoryInterface, noteCategoryInterface);
-        addNotes(noteInterface, categoryInterface,noteCategoryInterface);
+        if(show_unfinished)
+        {
+            showunfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
+        }
+        else{
+            showfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
+        }
     }
 
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
+        Button changeview_button = new Button();
         TextArea textArea = new TextArea();
         textArea.setPlaceholder("Write here...");
         textArea.getStyle().set("minHeight,", "1000px");
@@ -64,40 +74,43 @@ public class MainView extends VerticalLayout {
         TextField textField_filename = new TextField("Enter name of your note:");
         ComboBox<String> priority = new ComboBox<>();
         MultiselectComboBox<String> category = new MultiselectComboBox<>();
-/*
-        Button button_save = new Button("Save note",
-                e -> Notification.show(service.save(textField_filename.getValue(), textArea.getValue())));
-*/
-        Button button_save = new Button("Save note",
-                e -> {
-                    Dialog dialog = new Dialog();
-                    Div div = new Div();
-                    Button button = new Button("Close");
-                    TextArea textarea = new TextArea();
 
-                    if(category.isEmpty())
-                    {
-                        dialog.open();
-                        textarea.setValue(category.getErrorMessage());
-                        div.add(textarea,button);
-                        dialog.add(div);
-                        button.addClickListener(close_event-> dialog.close());
-                        return;
-                    }
-                    else if(priority.isEmpty())
-                    {
-                        dialog.open();
-                        textarea.setValue(priority.getErrorMessage());
-                        div.add(textarea,button);
-                        dialog.add(div);
-                        button.addClickListener(close_event-> dialog.close());
-                        return;
-                    }
-                    Note x = saveToDatabase(textField_filename.getValue(), textArea.getValue(), Integer.parseInt(priority.getValue()) , noteInterface);
-                    noteInterface.updateNotes(x.getId_(), x.getText_(),x.getTitle_(), x.getPriority());
-                    addNote(x, noteInterface, categoryInterface, noteCategoryInterface);
-                    mapCategoryToNote(x.getId_(), category, noteCategoryInterface, categoryInterface);
-                });
+        Button button_save = new Button("Save note");
+
+        button_save.addClickListener(event->{
+            Dialog dialog = new Dialog();
+            Div div = new Div();
+            Button button = new Button("Close");
+            TextArea textarea = new TextArea();
+
+            if(category.isEmpty())
+            {
+                dialog.open();
+                textarea.setValue(category.getErrorMessage());
+                div.add(textarea,button);
+                dialog.add(div);
+                button.addClickListener(close_event-> dialog.close());
+                return;
+            }
+            else if(priority.isEmpty())
+            {
+                dialog.open();
+                textarea.setValue(priority.getErrorMessage());
+                div.add(textarea,button);
+                dialog.add(div);
+                button.addClickListener(close_event-> dialog.close());
+                return;
+            }
+
+            Note x = saveToDatabase(textField_filename.getValue(), textArea.getValue(), Integer.parseInt(priority.getValue()) , noteInterface);
+            noteInterface.updateNotes(x.getId_(),textArea.getValue(), x.getTitle_(), x.getPinned(), x.getDone_(), Integer.parseInt(priority.getValue()));
+            // addNote(x, noteInterface, categoryInterface, noteCategoryInterface);
+            mapCategoryToNote(x.getId_(), category, noteCategoryInterface, categoryInterface);
+
+            //saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface);
+            UI.getCurrent().getPage().reload();
+        });
+
         HorizontalLayout horizont = new HorizontalLayout();
 
         category.setRequired(true);
@@ -112,29 +125,70 @@ public class MainView extends VerticalLayout {
         priority.setLabel("Priority");
         priority.setItems(setPriorities());
 
-        button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        addClassName("centered-content");
+
         horizont.add(category, priority);
-        add(textField_filename, textArea, horizont, button_save);
+
+
+        button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        button_save.addClassName("button");
+
+        // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
+        addClassName("centered-content");
+        if(show_unfinished)
+        {
+            changeview_button.setText("Show finished tasks");
+        }
+        else{
+            changeview_button.setText("Show unfinished tasks");
+        }
+        changeview_button.addClickListener(event->{
+
+            if(show_unfinished)
+            {
+                show_unfinished = false;
+            }
+            else{
+                show_unfinished = true;
+            }
+            UI.getCurrent().getPage().reload();
+        });
+
+
+        add(textField_filename, textArea, horizont, button_save, changeview_button);
     }
 
-
-
-    private void addNote(Note note, NoteInterface noteInterface,CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+/*    private void addNote(Note note, NoteInterface noteInterface,CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         Note(note, noteInterface, categoryInterface, noteCategoryInterface);
-    }
-
+    }*/
 
     /**
      * Loads the List with all notes.
      */
-    private void addNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+    private void showunfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
 
-        List<Note> notes = noteInterface.findAll();
+        List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
+
         notes.forEach(note -> {
-            Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+            if(note.getDone_()==false)
+            {
+                Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+
+            }
         });
+    }
+    private void showfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+
+        List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
+
+        notes.forEach(note -> {
+            if(note.getDone_())
+            {
+                Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+            }
+        });
+
+
     }
 
     private void addCategories(CategoryInterface categoryInterface, MultiselectComboBox<String> toAdd)
@@ -150,35 +204,12 @@ public class MainView extends VerticalLayout {
         toAdd.setItems(cat_string.stream());
     }
 
-
-
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
-        //this will be displayed;
-
-
-
-        /*JButton button = new JButton("edit");
-
-        JPanel panel = new JPanel();
-        panel.setOpaque(true);
-        panel.add(button);
-
-
-        JFrame frame = new JFrame(note.getTitle_());
-
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setContentPane(panel);
-        frame.pack();
-        frame.setVisible(true);
-
-
-
-        JTextArea textArea = new JTextArea(note.getTitle_());
-        textArea.setText(note.getText_());
-        textArea.setEditable(false);
-*/
         Div div = new Div();
         Button button = new Button("Edit");
+        Button delete_button = new Button("Delete");
+        delete_button.addClassName("delete_button");
+        button.addClassName("button");
         ComboBox<String> priority = new ComboBox<>();
         MultiselectComboBox<String> category = new MultiselectComboBox<>();
         addCategories(categoryInterface, category);
@@ -188,33 +219,42 @@ public class MainView extends VerticalLayout {
         priority.setLabel("Priority");
         priority.setItems(setPriorities());
 
-        TextField textField = new TextField(note.getTitle_());
+        Icon icon = new Icon(VaadinIcon.PIN);
+        Button pin = new Button(icon);
+
+
+
         String cats = fillCategories(note.getId_(),noteCategoryInterface, categoryInterface).toString();
         TextArea categories = new TextArea();
         categories.setValue(cats.substring(1, cats.length() - 1));
         TextArea priorities = new TextArea();
         priorities.setValue(note.getPriority().toString());
 
-        categories.isReadOnly();
-        priorities.isReadOnly();
-
+        categories.setReadOnly(true);
+        priorities.setReadOnly(true);
         HorizontalLayout horizontal = new HorizontalLayout();
-        horizontal.add(textField, priorities, categories);
+
+
+        TextField textField = new TextField(note.getTitle_());
         textField.setValue(note.getText_());
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
+        Checkbox done = new Checkbox("Done");
+
+        horizontal.add(textField, priorities, categories);
         textField.setReadOnly(true);
 
-        div.add(horizontal, button);
-
+        div.add(horizontal, button, delete_button, done, pin);
         Dialog dialog = new Dialog();
 
         Button save = new Button("Save");
+
 
         TextArea textArea = new TextArea(note.getTitle_());
         textArea.setValue(note.getText_());
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
+
 
         category.setRequired(true);
         category.setRequiredIndicatorVisible(true);
@@ -224,6 +264,22 @@ public class MainView extends VerticalLayout {
         priority.setRequiredIndicatorVisible(true);
         priority.setErrorMessage("Priority must be filled in!");
 
+        Notification notification = new Notification(
+                "Pinned note", 3000);
+
+        pin.addClickListener(clicked -> {
+            note.setPinned(!note.getPinned());
+            noteInterface.updateNotes(note.getId_(), textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_(), note.getPriority());
+            notification.open();
+            UI.getCurrent().getPage().reload();
+        });
+
+        done.setValue(note.getDone_());
+        done.addClickListener(event -> {
+            note.setDone_(!note.getDone_());
+            noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(),note.getPinned(), note.getDone_(), note.getPriority());
+
+        });
 
         button.addClickListener(event -> {
             dialog.open();
@@ -238,7 +294,9 @@ public class MainView extends VerticalLayout {
             category.setValue(fillCategories(note.getId_(),noteCategoryInterface,categoryInterface));
             priority.isRequired();
             category.isRequired();
+
             save.addClickListener(eventSave -> {
+
 
                 Dialog dialog1 = new Dialog();
                 Div div1 = new Div();
@@ -264,33 +322,40 @@ public class MainView extends VerticalLayout {
                     return;
                 }
                 dialog.close();
-                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), Integer.parseInt(priority.getValue()));
+                noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_(), Integer.parseInt(priority.getValue()));
                 textField.setValue(textArea.getValue());
                 editCategories(note,noteCategoryInterface,categoryInterface,category);
+                UI.getCurrent().getPage().reload();
+
 
             });
 
         });
 
 
+        delete_button.addClickListener(event -> {
+            deleteCategoryMap(note, noteCategoryInterface, categoryInterface);
+            noteInterface.deleteById(note.getId_());
+
+            UI.getCurrent().getPage().reload();
+        });
+
         add(div);
+
+
     }
+
 
     public Note saveToDatabase(String filename, String text, Integer priority, NoteInterface notes)
     {
-        Note note = new Note();
-        note.setTitle_(filename);
-        note.setText_(text);
+        Note note = new Note(filename, text);
         note.setPriority(priority);
         notes.save(note);
-
         return note;
-
-
     }
 
-   public void mapCategoryToNote(Integer note_id, MultiselectComboBox<String> category,
-                                 NoteCategoryInterface notecategoryInterface, CategoryInterface categoryInterface)
+    public void mapCategoryToNote(Integer note_id, MultiselectComboBox<String> category,
+                                  NoteCategoryInterface notecategoryInterface, CategoryInterface categoryInterface)
     {
 
         List<NoteCategory> note_category_list = new ArrayList<>();
@@ -321,7 +386,6 @@ public class MainView extends VerticalLayout {
         }
     }
 
-
     public Set<String> fillCategories(Integer note_id, NoteCategoryInterface notecategoryInterface, CategoryInterface categoryInterface)
     {
         List<Category> cat_entries = categoryInterface.findAll();
@@ -346,23 +410,24 @@ public class MainView extends VerticalLayout {
 
 
     }
-
     public void editCategories(Note note,  NoteCategoryInterface notecategoryInterface, CategoryInterface categoryInterface, MultiselectComboBox<String> category)
     {
+        deleteCategoryMap(note, notecategoryInterface, categoryInterface);
 
-        List<NoteCategory> notecat_entries = notecategoryInterface.findAll();
+        mapCategoryToNote(note.getId_(),category,notecategoryInterface,categoryInterface);
+    }
+
+    public void deleteCategoryMap(Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        List<NoteCategory> notecat_entries = noteCategoryInterface.findAll();
 
         for(NoteCategory  notecat_iterator : notecat_entries)
         {
             if(notecat_iterator.getFk_note().equals(note.getId_()))
             {
-                notecategoryInterface.delete(notecat_iterator);
+                noteCategoryInterface.delete(notecat_iterator);
             }
         }
-
-        mapCategoryToNote(note.getId_(),category,notecategoryInterface,categoryInterface);
-
-
     }
 
     public Set<String> setPriorities()
@@ -374,5 +439,5 @@ public class MainView extends VerticalLayout {
         }
         return ret_set;
     }
-
 }
+
