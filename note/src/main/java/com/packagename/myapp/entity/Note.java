@@ -17,6 +17,8 @@ public class Note
 
     private String text;
 
+    private Integer priority;
+
     public Note()
     {
     }
@@ -55,5 +57,13 @@ public class Note
     public void setText_(String text_)
     {
         this.text = text_;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }
