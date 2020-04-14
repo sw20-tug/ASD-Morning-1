@@ -115,7 +115,7 @@ public class MainView extends VerticalLayout {
     }
     private void showfinishedNotes(NoteInterface noteInterface) {
 
-        List<Note> notes = noteInterface.findAll();
+        List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
 
         notes.forEach(note -> {
             if(note.getDone_())
@@ -162,15 +162,16 @@ public class MainView extends VerticalLayout {
                 "Pinned note", 3000);
 
         pin.addClickListener(clicked -> {
-            note.setPinned(!note.getPinned());
-            noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned());
-            notification.open();
-            UI.getCurrent().getPage().reload();
+                    note.setPinned(!note.getPinned());
+                    noteInterface.updateNotes(note.getId_(), textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_());
+                    notification.open();
+                    UI.getCurrent().getPage().reload();
+                });
 
         done.setValue(note.getDone_());
         done.addClickListener(event -> {
            note.setDone_(!note.getDone_());
-           noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getDone_());
+           noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(),note.getPinned(), note.getDone_());
 
         });
 
@@ -195,10 +196,12 @@ public class MainView extends VerticalLayout {
             noteInterface.deleteById(note.getId_());
             UI.getCurrent().getPage().reload();
         });
+
             add(div);
 
 
     }
+
 
     public void saveToDatabase(String filename, String text, NoteInterface notes)
     {

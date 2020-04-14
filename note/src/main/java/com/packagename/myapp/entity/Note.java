@@ -72,7 +72,7 @@ public class Note
 
     public void setPinned(Boolean pinned) {
         this.pinned = pinned;
-
+    }
     public Boolean getDone_() {
         return done;
     }
