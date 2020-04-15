@@ -22,6 +22,8 @@ public class Note
 
     private Boolean done;
 
+    private Integer priority;
+
 
     public Note()
     {
@@ -80,5 +82,13 @@ public class Note
     public void setDone_(Boolean done) {
         this.done = done;
 
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }
