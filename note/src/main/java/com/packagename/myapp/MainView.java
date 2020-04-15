@@ -16,6 +16,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.icon.Icon;
@@ -72,62 +73,27 @@ public class MainView extends VerticalLayout {
         textArea.getStyle().set("minWidth", "300px");
 
         TextField textField_filename = new TextField("Enter name of your note:");
-        ComboBox<String> priority = new ComboBox<>();
-        MultiselectComboBox<String> category = new MultiselectComboBox<>();
+
+        ComboBox<String> priority = createPriorityInput();
+        MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
         Button button_save = new Button("Save note");
 
         button_save.addClickListener(event->{
-            Dialog dialog = new Dialog();
-            Div div = new Div();
-            Button button = new Button("Close");
-            TextArea textarea = new TextArea();
 
-            if(category.isEmpty())
-            {
-                dialog.open();
-                textarea.setValue(category.getErrorMessage());
-                div.add(textarea,button);
-                dialog.add(div);
-                button.addClickListener(close_event-> dialog.close());
+            if (!emptyCheck(priority,category))
                 return;
-            }
-            else if(priority.isEmpty())
-            {
-                dialog.open();
-                textarea.setValue(priority.getErrorMessage());
-                div.add(textarea,button);
-                dialog.add(div);
-                button.addClickListener(close_event-> dialog.close());
-                return;
-            }
 
             Note x = saveToDatabase(textField_filename.getValue(), textArea.getValue(), Integer.parseInt(priority.getValue()) , noteInterface);
             noteInterface.updateNotes(x.getId_(),textArea.getValue(), x.getTitle_(), x.getPinned(), x.getDone_(), Integer.parseInt(priority.getValue()));
-            // addNote(x, noteInterface, categoryInterface, noteCategoryInterface);
             mapCategoryToNote(x.getId_(), category, noteCategoryInterface, categoryInterface);
-
-            //saveToDatabase(textField_filename.getValue(), textArea.getValue(), noteInterface);
             UI.getCurrent().getPage().reload();
         });
 
         HorizontalLayout horizont = new HorizontalLayout();
-
-        category.setRequired(true);
-        category.setRequiredIndicatorVisible(true);
-        category.setErrorMessage("Category must be filled in!");
-        category.setLabel("Categories");
-        addCategories(categoryInterface, category);
-
-        priority.setRequired(true);
-        priority.setRequiredIndicatorVisible(true);
-        priority.setErrorMessage("Priority must be filled in!");
-        priority.setLabel("Priority");
-        priority.setItems(setPriorities());
-
-
-
         horizont.add(category, priority);
+
+
 
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -157,10 +123,6 @@ public class MainView extends VerticalLayout {
 
         add(textField_filename, textArea, horizont, button_save, changeview_button);
     }
-
-/*    private void addNote(Note note, NoteInterface noteInterface,CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
-        Note(note, noteInterface, categoryInterface, noteCategoryInterface);
-    }*/
 
     /**
      * Loads the List with all notes.
@@ -210,30 +172,22 @@ public class MainView extends VerticalLayout {
         Button delete_button = new Button("Delete");
         delete_button.addClassName("delete_button");
         button.addClassName("button");
-        ComboBox<String> priority = new ComboBox<>();
-        MultiselectComboBox<String> category = new MultiselectComboBox<>();
-        addCategories(categoryInterface, category);
-        category.setLabel("Category");
 
-
-        priority.setLabel("Priority");
-        priority.setItems(setPriorities());
+        ComboBox<String> priority = createPriorityInput();
+        MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
         Icon icon = new Icon(VaadinIcon.PIN);
         Button pin = new Button(icon);
 
-
-
         String cats = fillCategories(note.getId_(),noteCategoryInterface, categoryInterface).toString();
         TextArea categories = new TextArea();
         categories.setValue(cats.substring(1, cats.length() - 1));
+        categories.setReadOnly(true);
+
         TextArea priorities = new TextArea();
         priorities.setValue(note.getPriority().toString());
-
-        categories.setReadOnly(true);
         priorities.setReadOnly(true);
         HorizontalLayout horizontal = new HorizontalLayout();
-
 
         TextField textField = new TextField(note.getTitle_());
         textField.setValue(note.getText_());
@@ -246,23 +200,12 @@ public class MainView extends VerticalLayout {
 
         div.add(horizontal, button, delete_button, done, pin);
         Dialog dialog = new Dialog();
-
         Button save = new Button("Save");
-
 
         TextArea textArea = new TextArea(note.getTitle_());
         textArea.setValue(note.getText_());
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
-
-
-        category.setRequired(true);
-        category.setRequiredIndicatorVisible(true);
-        category.setErrorMessage("Category must be filled in!");
-
-        priority.setRequired(true);
-        priority.setRequiredIndicatorVisible(true);
-        priority.setErrorMessage("Priority must be filled in!");
 
         Notification notification = new Notification(
                 "Pinned note", 3000);
@@ -292,41 +235,16 @@ public class MainView extends VerticalLayout {
             dialog.add(horizont);
             priority.setValue(Integer.toString(note.getPriority()));
             category.setValue(fillCategories(note.getId_(),noteCategoryInterface,categoryInterface));
-            priority.isRequired();
-            category.isRequired();
 
             save.addClickListener(eventSave -> {
 
-
-                Dialog dialog1 = new Dialog();
-                Div div1 = new Div();
-                Button button1 = new Button("Close");
-                TextArea textarea1 = new TextArea();
-
-                if(category.isEmpty())
-                {
-                    dialog1.open();
-                    textarea1.setValue(category.getErrorMessage());
-                    div1.add(textarea1,button1);
-                    dialog1.add(div1);
-                    button1.addClickListener(close_event-> dialog1.close());
+                if (!emptyCheck(priority,category))
                     return;
-                }
-                else if(priority.isEmpty())
-                {
-                    dialog1.open();
-                    textarea1.setValue(priority.getErrorMessage());
-                    div1.add(textarea1,button1);
-                    dialog1.add(div1);
-                    button1.addClickListener(close_event-> dialog1.close());
-                    return;
-                }
-                dialog.close();
+
                 noteInterface.updateNotes(note.getId_(),textArea.getValue(), note.getTitle_(), note.getPinned(), note.getDone_(), Integer.parseInt(priority.getValue()));
                 textField.setValue(textArea.getValue());
                 editCategories(note,noteCategoryInterface,categoryInterface,category);
                 UI.getCurrent().getPage().reload();
-
 
             });
 
@@ -364,8 +282,6 @@ public class MainView extends VerticalLayout {
 
         for(String cat : set_category)
         {
-            //System.out.println(cat);
-
             Integer cat_id = -1;
             for(Category cat_iterator : categories)
             {
@@ -390,7 +306,7 @@ public class MainView extends VerticalLayout {
     {
         List<Category> cat_entries = categoryInterface.findAll();
         List<NoteCategory> notecat_entries = notecategoryInterface.findAll();
-        Set<String> categories = new HashSet<String>();
+        Set<String> categories = new HashSet<>();
 
 
         for(NoteCategory  notecat_iterator : notecat_entries)
@@ -439,5 +355,66 @@ public class MainView extends VerticalLayout {
         }
         return ret_set;
     }
+
+
+
+    public boolean emptyCheck(ComboBox<String> priority, MultiselectComboBox<String> category)
+    {
+        Dialog dialog = new Dialog();
+        Div div = new Div();
+        Button button = new Button("Close");
+        TextArea textarea = new TextArea();
+
+        if(category.isEmpty())
+        {
+            dialog.open();
+            textarea.setValue(category.getErrorMessage());
+            div.add(textarea,button);
+            dialog.add(div);
+            button.addClickListener(close_event-> dialog.close());
+            return false;
+        }
+        else if(priority.isEmpty())
+        {
+            dialog.open();
+            textarea.setValue(priority.getErrorMessage());
+            div.add(textarea,button);
+            dialog.add(div);
+            button.addClickListener(close_event-> dialog.close());
+            return false;
+        }
+        dialog.close();
+        return true;
+
+    }
+
+
+    public ComboBox<String> createPriorityInput()
+    {
+        ComboBox<String> priority = new ComboBox<>();
+        priority.setLabel("Priority");
+        priority.setItems(setPriorities());
+        priority.setRequired(true);
+        priority.setRequiredIndicatorVisible(true);
+        priority.setErrorMessage("Priority must be filled in!");
+
+        return priority;
+    }
+
+    public MultiselectComboBox<String> createCategoryInput(CategoryInterface categoryInterface)
+    {
+        MultiselectComboBox<String> category = new MultiselectComboBox<>();
+        category.setLabel("Category");
+        category.setLabel("Categories");
+        addCategories(categoryInterface, category);
+        category.setRequired(true);
+        category.setRequiredIndicatorVisible(true);
+        category.setErrorMessage("Category must be filled in!");
+
+        return category;
+    }
+
+
+
 }
 
