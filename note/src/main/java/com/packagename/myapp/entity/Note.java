@@ -3,6 +3,8 @@ package com.packagename.myapp.entity;
 import javax.persistence.*;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.util.Date;
 
 @Entity //Note als Entity und Table definieren
 @Table(name = "notes")
@@ -24,6 +26,7 @@ public class Note
 
     private Integer priority;
 
+    private java.util.Date created;
 
     public Note()
     {
@@ -35,6 +38,7 @@ public class Note
         this.text = text;
         this.done = false;
         this.pinned = false;
+        created = new Date();
     }
 
     public Integer getId_()
@@ -90,5 +94,13 @@ public class Note
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 }
