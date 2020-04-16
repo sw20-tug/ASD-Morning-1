@@ -1,14 +1,10 @@
 package com.packagename.myapp;
-
-import com.packagename.myapp.controller.NoteController;
 import com.packagename.myapp.entity.Category;
 import com.packagename.myapp.entity.Note;
 import com.packagename.myapp.entity.NoteCategory;
 import com.packagename.myapp.notes.CategoryInterface;
 import com.packagename.myapp.notes.NoteCategoryInterface;
 import com.packagename.myapp.notes.NoteInterface;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -16,13 +12,10 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -32,15 +25,16 @@ import com.vaadin.flow.server.PWA;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.vaadin.gatanaso.MultiselectComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 
 
 import java.awt.*;
-import java.util.Set;
+import java.util.List;
 
 @Route
 @PWA(name = "Notes App",
@@ -50,7 +44,20 @@ import java.util.Set;
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
 public class MainView extends VerticalLayout {
+
+    enum AppliedFilters{
+        PRI_CAT_DATE, PRI_CAT, PRI_DATE, CAT_DATE, PRI, CAT, DATE, NONE, INVALID
+    }
+
+
     static boolean show_unfinished = true;
+    static boolean date_ = false;
+    static boolean title_ = false;
+    static String filter_cat_ = "";
+    static String filter_pri_ = "";
+    static LocalDate date_from_ = null;
+    static LocalDate date_until_ = null;
+
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
 
@@ -67,6 +74,32 @@ public class MainView extends VerticalLayout {
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
         Button changeview_button = new Button();
+        Button clear_filters = new Button("Clear filter");
+
+        Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
+
+        Checkbox date = new Checkbox("Sort Date");
+        date.setValue(date_);
+        Checkbox title = new Checkbox("Sort Title");
+        title.setValue(title_);
+
+
+        ComboBox<String>filter_pri = createPriorityInput(true);
+        filter_pri.setValue(filter_pri_);
+
+        ComboBox<String> filter_cat = new ComboBox<>("Categories");
+        filter_cat.setItems(getCategories(categoryInterface));
+        filter_cat.setValue(filter_cat_);
+
+        DatePicker filter_date_from = new  DatePicker("Date from");
+        filter_date_from.setValue(date_from_);
+
+        DatePicker filter_date_until = new  DatePicker("Date until");
+        filter_date_until.setValue(date_until_);
+
+
+        unfinished_finished.setValue(!show_unfinished);
+
         TextArea textArea = new TextArea();
         textArea.setPlaceholder("Write here...");
         textArea.getStyle().set("minHeight,", "1000px");
@@ -74,7 +107,7 @@ public class MainView extends VerticalLayout {
 
         TextField textField_filename = new TextField("Enter name of your note:");
 
-        ComboBox<String> priority = createPriorityInput();
+        ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
         Button button_save = new Button("Save note");
@@ -84,44 +117,54 @@ public class MainView extends VerticalLayout {
             if (!emptyCheck(priority,category))
                 return;
 
-            Note x = saveToDatabase(textField_filename.getValue(), textArea.getValue(), Integer.parseInt(priority.getValue()) , noteInterface);
-            noteInterface.updateNotes(x.getId_(),textArea.getValue(), x.getTitle_(), x.getPinned(), x.getDone_(), Integer.parseInt(priority.getValue()));
-            mapCategoryToNote(x.getId_(), category, noteCategoryInterface, categoryInterface);
+            Note note = saveToDatabase(textField_filename.getValue(), textArea.getValue(), Integer.parseInt(priority.getValue()) , noteInterface);
+            mapCategoryToNote(note.getId_(), category, noteCategoryInterface, categoryInterface);
             UI.getCurrent().getPage().reload();
         });
 
-        HorizontalLayout horizont = new HorizontalLayout();
-        horizont.add(category, priority);
+        clear_filters.addClickListener(clear_filter_event ->{
+            filter_pri.setValue(filter_pri_ = "");
+            filter_cat.setValue(filter_cat_ = "");
+            show_unfinished = true;
+            date_ =  title_= false;
+            date_until_ = date_from_ = null;
+            UI.getCurrent().getPage().reload();
+        });
 
+        //filter Comboboxes
+        HorizontalLayout horizont_filter_comboboxes = new HorizontalLayout();
+        horizont_filter_comboboxes.add(filter_pri, filter_cat, filter_date_from, filter_date_until);
 
+        //Fields for category and priority input
+        HorizontalLayout horizont_add_cat_pri = new HorizontalLayout();
+        horizont_add_cat_pri.add(category, priority);
 
+        //filter Checkboxes
+        HorizontalLayout horizont_filter_checkboxes = new HorizontalLayout();
+        horizont_filter_checkboxes.add(title, date,  unfinished_finished);
+
+        //filter buttons
+        HorizontalLayout filter_buttons = new HorizontalLayout();
+        filter_buttons.add(changeview_button, clear_filters);
 
         button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         button_save.addClassName("button");
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
-        if(show_unfinished)
-        {
-            changeview_button.setText("Show finished tasks");
-        }
-        else{
-            changeview_button.setText("Show unfinished tasks");
-        }
+        changeview_button.setText("Apply filter");
         changeview_button.addClickListener(event->{
-
-            if(show_unfinished)
-            {
-                show_unfinished = false;
-            }
-            else{
-                show_unfinished = true;
-            }
+            show_unfinished = !unfinished_finished.getValue();
+            title_ = title.getValue();
+            date_ = date.getValue();
+            filter_pri_ = filter_pri.getValue();
+            filter_cat_ = filter_cat.getValue();
+            date_from_ = filter_date_from.getValue();
+            date_until_ = filter_date_until.getValue();
             UI.getCurrent().getPage().reload();
         });
 
-
-        add(textField_filename, textArea, horizont, button_save, changeview_button);
+        add(textField_filename, textArea, horizont_add_cat_pri, button_save, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
     }
 
     /**
@@ -130,40 +173,136 @@ public class MainView extends VerticalLayout {
     private void showunfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
 
         List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
-
-        notes.forEach(note -> {
-            if(note.getDone_()==false)
+        ArrayList<Integer> pinned_notes = new ArrayList<>();
+        notes.forEach(note-> {
+            if(!note.getDone_())
             {
+                if(!note.getPinned())
+                    return;
                 Note(note, noteInterface, categoryInterface, noteCategoryInterface);
-
+                pinned_notes.add(note.getId_());
             }
         });
+
+        AppliedFilters applied_filter = checkFiltering(notes, noteInterface);
+
+        notes.forEach(note -> {
+            if(!pinned_notes.contains(note.getId_()) && !note.getDone_())
+                applyFilter(note, noteInterface, noteCategoryInterface, categoryInterface, applied_filter);
+        });
     }
+
     private void showfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
 
         List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
-
-        notes.forEach(note -> {
+        ArrayList<Integer> pinned_notes = new ArrayList<>();
+        notes.forEach(note-> {
             if(note.getDone_())
             {
+                if(note.getPinned())
+                    return;
                 Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                pinned_notes.add(note.getId_());
             }
         });
 
-
+        AppliedFilters applied_filter = checkFiltering(notes, noteInterface);
+        notes.forEach(note -> {
+            if(!pinned_notes.contains(note.getId_()) && note.getDone_())
+                    applyFilter(note, noteInterface, noteCategoryInterface, categoryInterface, applied_filter);
+        });
     }
 
-    private void addCategories(CategoryInterface categoryInterface, MultiselectComboBox<String> toAdd)
-    {
 
-        List<Category> categories = categoryInterface.findAll();
-        ArrayList<String> cat_string = new ArrayList<String>();
-        categories.forEach(
-                category -> {
-                    cat_string.add(category.getCategory());
-                }
-        );
-        toAdd.setItems(cat_string.stream());
+    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface, AppliedFilters filter)
+    {
+        switch(filter)
+        {
+            case PRI:
+                if(filter_pri_.equals(note.getPriority().toString()))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case PRI_CAT:
+                if(filter_pri_.equals(note.getPriority().toString()) && checkCategory(categoryInterface,
+                        noteCategoryInterface, note.getId_()))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case PRI_DATE:
+                if(checkDate(note) && filter_pri_.equals(note.getPriority().toString()))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case PRI_CAT_DATE:
+                if(filter_pri_.equals(note.getPriority().toString()) && checkCategory(categoryInterface,
+                        noteCategoryInterface, note.getId_()) && checkDate(note))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case CAT:
+                if(checkCategory(categoryInterface, noteCategoryInterface, note.getId_()))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case CAT_DATE:
+                if(checkDate(note) && checkCategory(categoryInterface, noteCategoryInterface, note.getId_()))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case DATE:
+                if(checkDate(note))
+                    Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            case NONE:
+                Note(note, noteInterface, categoryInterface, noteCategoryInterface);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private AppliedFilters checkFiltering(List<Note> notes, NoteInterface noteInterface)
+    {
+        if(title_ && date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created", "title"));
+        else if(title_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "title"));
+        else if(date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created"));
+
+        if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
+            return AppliedFilters.PRI_CAT_DATE;
+        else if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
+            return AppliedFilters.PRI_CAT;
+        else if(!filter_pri_.isEmpty() && filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
+            return AppliedFilters.PRI_DATE;
+        else if(!filter_pri_.isEmpty() && filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
+            return AppliedFilters.PRI;
+        else if(filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
+            return AppliedFilters.CAT_DATE;
+        else if(filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
+            return AppliedFilters.CAT;
+        else if(filter_pri_.isEmpty() && filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
+            return AppliedFilters.DATE;
+        else if(filter_pri_.isEmpty() && filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
+            return AppliedFilters.NONE;
+        return AppliedFilters.INVALID;
+    }
+
+
+    public Boolean checkDate(Note note)
+    {
+        return (note.getCreated().after( Date.from(date_from_.atStartOfDay(ZoneId.systemDefault()).toInstant()) ) &&
+                note.getCreated().before(Date.from(date_until_.atStartOfDay(ZoneId.systemDefault()).toInstant())));
+    }
+
+    public Boolean checkCategory(CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface, Integer note_id)
+    {
+        if(filter_cat_.isEmpty())
+            return false;
+
+        Set<String> categories_to_id = fillCategories(note_id, noteCategoryInterface, categoryInterface);
+        for(String to_test : categories_to_id)
+        {
+            if( to_test.equals(filter_cat_))
+                return true;
+        }
+        return false;
     }
 
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
@@ -173,7 +312,7 @@ public class MainView extends VerticalLayout {
         delete_button.addClassName("delete_button");
         button.addClassName("button");
 
-        ComboBox<String> priority = createPriorityInput();
+        ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
         Icon icon = new Icon(VaadinIcon.PIN);
@@ -253,7 +392,7 @@ public class MainView extends VerticalLayout {
 
 
         delete_button.addClickListener(event -> {
-            deleteCategoryMap(note, noteCategoryInterface, categoryInterface);
+            deleteCategoryMap(note, noteCategoryInterface);
             noteInterface.deleteById(note.getId_());
 
             UI.getCurrent().getPage().reload();
@@ -308,8 +447,6 @@ public class MainView extends VerticalLayout {
         List<Category> cat_entries = categoryInterface.findAll();
         List<NoteCategory> notecat_entries = notecategoryInterface.findAll();
         Set<String> categories = new HashSet<>();
-
-
         for(NoteCategory  notecat_iterator : notecat_entries)
         {
             if(notecat_iterator.getFk_note().equals(note_id))
@@ -322,19 +459,29 @@ public class MainView extends VerticalLayout {
                     }
             }
         }
-
         return categories;
-
-
     }
+
+    public Set<String> getCategories(CategoryInterface categoryInterface)
+    {
+        Set<String> categories = new HashSet<>();
+        List<Category> cats = categoryInterface.findAll();
+        cats.forEach(
+                category -> {
+                    categories.add(category.getCategory());
+                }
+        );
+        return categories;
+    }
+
+
     public void editCategories(Note note,  NoteCategoryInterface notecategoryInterface, CategoryInterface categoryInterface, MultiselectComboBox<String> category)
     {
-        deleteCategoryMap(note, notecategoryInterface, categoryInterface);
-
+        deleteCategoryMap(note, notecategoryInterface);
         mapCategoryToNote(note.getId_(),category,notecategoryInterface,categoryInterface);
     }
 
-    public void deleteCategoryMap(Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    public void deleteCategoryMap(Note note, NoteCategoryInterface noteCategoryInterface)
     {
         List<NoteCategory> notecat_entries = noteCategoryInterface.findAll();
 
@@ -361,44 +508,35 @@ public class MainView extends VerticalLayout {
 
     public boolean emptyCheck(ComboBox<String> priority, MultiselectComboBox<String> category)
     {
-        Dialog dialog = new Dialog();
-        Div div = new Div();
-        Button button = new Button("Close");
-        TextArea textarea = new TextArea();
-
-        if(category.isEmpty())
+        if(category.isEmpty() || priority.isEmpty())
         {
+            Dialog dialog = new Dialog();
+            Div div = new Div();
+            Button button = new Button("Close");
+            TextArea textarea = new TextArea();
+            boolean return_val = true;
             dialog.open();
-            textarea.setValue(category.getErrorMessage());
+            textarea.setValue((category.isEmpty()) ? (category.getErrorMessage()) : (priority.getErrorMessage()));
             div.add(textarea,button);
             dialog.add(div);
             button.addClickListener(close_event-> dialog.close());
             return false;
         }
-        else if(priority.isEmpty())
-        {
-            dialog.open();
-            textarea.setValue(priority.getErrorMessage());
-            div.add(textarea,button);
-            dialog.add(div);
-            button.addClickListener(close_event-> dialog.close());
-            return false;
-        }
-        dialog.close();
         return true;
-
     }
 
 
-    public ComboBox<String> createPriorityInput()
+    public ComboBox<String> createPriorityInput(Boolean filter)
     {
         ComboBox<String> priority = new ComboBox<>();
         priority.setLabel("Priority");
         priority.setItems(setPriorities());
-        priority.setRequired(true);
-        priority.setRequiredIndicatorVisible(true);
-        priority.setErrorMessage("Priority must be filled in!");
-
+        if(!filter)
+        {
+            priority.setRequired(true);
+            priority.setRequiredIndicatorVisible(true);
+            priority.setErrorMessage("Priority must be filled in!");
+        }
         return priority;
     }
 
@@ -407,7 +545,7 @@ public class MainView extends VerticalLayout {
         MultiselectComboBox<String> category = new MultiselectComboBox<>();
         category.setLabel("Category");
         category.setLabel("Categories");
-        addCategories(categoryInterface, category);
+        category.setItems(getCategories(categoryInterface));
         category.setRequired(true);
         category.setRequiredIndicatorVisible(true);
         category.setErrorMessage("Category must be filled in!");
