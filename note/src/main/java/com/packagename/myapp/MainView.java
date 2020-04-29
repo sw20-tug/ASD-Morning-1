@@ -60,7 +60,7 @@ public class MainView extends VerticalLayout {
 
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
-
+        initializeCat(categoryInterface);
         addInput(service, noteInterface, categoryInterface, noteCategoryInterface);
         if(show_unfinished)
         {
@@ -68,6 +68,17 @@ public class MainView extends VerticalLayout {
         }
         else{
             showfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
+        }
+    }
+    private void initializeCat(CategoryInterface categoryInterface)
+    {
+        if(categoryInterface.findAll().isEmpty())
+        {
+            Set<String> cat_names = new HashSet<String>(Arrays.asList("School", "Shopping", "Home", "Work", "Workout"));
+            cat_names.forEach(cat_nam -> {
+                    Category cat = new Category(cat_nam);
+                    categoryInterface.save(cat);
+            });
         }
     }
 
