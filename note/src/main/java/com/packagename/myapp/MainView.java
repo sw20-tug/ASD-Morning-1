@@ -184,6 +184,13 @@ public class MainView extends VerticalLayout {
             }
         });
 
+        if(title_ && date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created", "title"));
+        else if(title_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "title"));
+        else if(date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created"));
+
         AppliedFilters applied_filter = checkFiltering(notes, noteInterface);
 
         notes.forEach(note -> {
@@ -205,6 +212,13 @@ public class MainView extends VerticalLayout {
                 pinned_notes.add(note.getId_());
             }
         });
+
+        if(title_ && date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created", "title"));
+        else if(title_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "title"));
+        else if(date_)
+            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created"));
 
         AppliedFilters applied_filter = checkFiltering(notes, noteInterface);
         notes.forEach(note -> {
@@ -258,12 +272,7 @@ public class MainView extends VerticalLayout {
 
     private AppliedFilters checkFiltering(List<Note> notes, NoteInterface noteInterface)
     {
-        if(title_ && date_)
-            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created", "title"));
-        else if(title_)
-            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "title"));
-        else if(date_)
-            notes = noteInterface.findAll(Sort.by(Sort.Direction.ASC, "created"));
+
 
         if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
             return AppliedFilters.PRI_CAT_DATE;
@@ -514,7 +523,6 @@ public class MainView extends VerticalLayout {
             Div div = new Div();
             Button button = new Button("Close");
             TextArea textarea = new TextArea();
-            boolean return_val = true;
             dialog.open();
             textarea.setValue((category.isEmpty()) ? (category.getErrorMessage()) : (priority.getErrorMessage()));
             div.add(textarea,button);
