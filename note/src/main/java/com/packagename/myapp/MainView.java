@@ -70,17 +70,6 @@ public class MainView extends VerticalLayout {
             showfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
         }
     }
-    private void initializeCat(CategoryInterface categoryInterface)
-    {
-        if(categoryInterface.findAll().isEmpty())
-        {
-            Set<String> cat_names = new HashSet<String>(Arrays.asList("School", "Shopping", "Home", "Work", "Workout"));
-            cat_names.forEach(cat_nam -> {
-                    Category cat = new Category(cat_nam);
-                    categoryInterface.save(cat);
-            });
-        }
-    }
 
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
@@ -572,6 +561,17 @@ public class MainView extends VerticalLayout {
         return category;
     }
 
+    private void initializeCat(CategoryInterface categoryInterface)
+    {
+        if(categoryInterface.findAll().isEmpty())
+        {
+            Set<String> cat_names = new HashSet<String>(Arrays.asList("School", "Shopping", "Home", "Work", "Workout"));
+            cat_names.forEach(cat_nam -> {
+                Category cat = new Category(cat_nam);
+                categoryInterface.save(cat);
+            });
+        }
+    }
 
 
 }
