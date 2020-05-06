@@ -49,7 +49,6 @@ public class MainView extends VerticalLayout {
         PRI_CAT_DATE, PRI_CAT, PRI_DATE, CAT_DATE, PRI, CAT, DATE, NONE, INVALID
     }
 
-
     static boolean show_unfinished = true;
     static boolean date_ = false;
     static boolean title_ = false;
@@ -75,6 +74,26 @@ public class MainView extends VerticalLayout {
         // Use TextField for standard text input
         Button changeview_button = new Button();
         Button clear_filters = new Button("Clear filter");
+        Div input_div = new Div();
+        input_div.getStyle().set("width", "100%");
+        input_div.getStyle().set("display", "flex");
+        input_div.getStyle().set("align-items", "center");
+        input_div.getStyle().set("justify-content", "center");
+        Div text_area_div = new Div();
+        text_area_div.getStyle().set("width", "100%");
+        text_area_div.getStyle().set("display", "flex");
+        text_area_div.getStyle().set("align-items", "center");
+        text_area_div.getStyle().set("justify-content", "center");
+        Div save_button_div = new Div();
+        save_button_div.getStyle().set("width", "100%");
+        save_button_div.getStyle().set("display", "flex");
+        save_button_div.getStyle().set("align-items", "center");
+        save_button_div.getStyle().set("justify-content", "center");
+        Div filter_div = new Div();
+        filter_div.getStyle().set("width", "100%");
+        Div line = new Div();
+        line.getStyle().set("width","100%").set("border-top","4px solid grey");
+
 
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
 
@@ -82,7 +101,6 @@ public class MainView extends VerticalLayout {
         date.setValue(date_);
         Checkbox title = new Checkbox("Sort Title");
         title.setValue(title_);
-
 
         ComboBox<String>filter_pri = createPriorityInput(true);
         filter_pri.setValue(filter_pri_);
@@ -97,15 +115,14 @@ public class MainView extends VerticalLayout {
         DatePicker filter_date_until = new  DatePicker("Date until");
         filter_date_until.setValue(date_until_);
 
-
         unfinished_finished.setValue(!show_unfinished);
 
         TextArea textArea = new TextArea();
         textArea.setPlaceholder("Write here...");
-        textArea.getStyle().set("minHeight,", "1000px");
-        textArea.getStyle().set("minWidth", "300px");
+        textArea.getStyle().set("height,", "2000px");
+        textArea.getStyle().set("width", "605px");
 
-        TextField textField_filename = new TextField("Enter name of your note:");
+        TextField textField_filename = new TextField("Title:");
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
@@ -131,17 +148,28 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+
         //filter Comboboxes
         HorizontalLayout horizont_filter_comboboxes = new HorizontalLayout();
         horizont_filter_comboboxes.add(filter_pri, filter_cat, filter_date_from, filter_date_until);
+        horizont_filter_comboboxes.getStyle().set("width", "100%");
+        horizont_filter_comboboxes.getStyle().set("display", "flex");
+        horizont_filter_comboboxes.getStyle().set("align-items", "center");
+        horizont_filter_comboboxes.getStyle().set("justify-content", "center");
+
 
         //Fields for category and priority input
         HorizontalLayout horizont_add_cat_pri = new HorizontalLayout();
-        horizont_add_cat_pri.add(category, priority);
+        horizont_add_cat_pri.add(textField_filename, category, priority);
 
         //filter Checkboxes
         HorizontalLayout horizont_filter_checkboxes = new HorizontalLayout();
         horizont_filter_checkboxes.add(title, date,  unfinished_finished);
+        horizont_filter_checkboxes.getStyle().set("width", "100%");
+        horizont_filter_checkboxes.getStyle().set("display", "flex");
+        horizont_filter_checkboxes.getStyle().set("align-items", "center");
+        horizont_filter_checkboxes.getStyle().set("justify-content", "center");
+
 
         //filter buttons
         HorizontalLayout filter_buttons = new HorizontalLayout();
@@ -164,7 +192,16 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        add(textField_filename, textArea, horizont_add_cat_pri, button_save, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+        save_button_div.add(button_save);
+        text_area_div.add(textArea);
+        input_div.add(horizont_add_cat_pri);
+        filter_div.add(horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+
+        add(input_div, text_area_div, save_button_div, line, filter_div);
+
+
+
+
     }
 
     /**
@@ -272,8 +309,6 @@ public class MainView extends VerticalLayout {
 
     private AppliedFilters checkFiltering(List<Note> notes, NoteInterface noteInterface)
     {
-
-
         if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
             return AppliedFilters.PRI_CAT_DATE;
         else if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
@@ -316,6 +351,7 @@ public class MainView extends VerticalLayout {
 
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         Div div = new Div();
+
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
         delete_button.addClassName("delete_button");

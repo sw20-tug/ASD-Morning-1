@@ -7,7 +7,7 @@
 /* Example: CSS class name to center align the content . */
 .centered-content {
   margin: 0 auto;
-  max-width: 250px;
+  max-width: 1000px;
 }
 .delete_button{
   background-color: #ff6161;
