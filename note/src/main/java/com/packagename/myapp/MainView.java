@@ -18,6 +18,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -318,8 +319,10 @@ public class MainView extends VerticalLayout {
         Div div = new Div();
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
+        Button share_button = new Button("Share");
         delete_button.addClassName("delete_button");
         button.addClassName("button");
+        share_button.addClassName("share_button");
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
@@ -346,7 +349,7 @@ public class MainView extends VerticalLayout {
         horizontal.add(textField, priorities, categories);
         textField.setReadOnly(true);
 
-        div.add(horizontal, button, delete_button, done, pin);
+        div.add(horizontal, button, delete_button, share_button, done, pin);
         Dialog dialog = new Dialog();
         Button save = new Button("Save");
 
@@ -355,6 +358,13 @@ public class MainView extends VerticalLayout {
         textArea.setValue(note.getText_());
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
+
+        EmailField emailField = new EmailField("share with: (email)");
+        emailField.setClearButtonVisible(true);
+        emailField.setErrorMessage("Please enter a valid email adress.");
+
+        Button send_mail = new Button("Send");
+        send_mail.addClassName("share_button");
 
         Notification notification = new Notification(
                 "Pinned note", 3000);
@@ -405,6 +415,29 @@ public class MainView extends VerticalLayout {
             noteInterface.deleteById(note.getId_());
 
             UI.getCurrent().getPage().reload();
+        });
+
+        share_button.addClickListener(event -> {
+            dialog.open();
+            dialog.setWidth("500px");
+            dialog.setHeight("250px");
+            dialog.add(emailField);
+            HorizontalLayout horizont = new HorizontalLayout();
+
+            horizont.add(send_mail);
+            dialog.add(horizont);
+
+            send_mail.addClickListener(eventSave -> {
+                String mail_subject = "";
+                String mail_content = "";
+
+                mail_subject = note.getTitle_();
+                mail_content = note.getText_();
+
+                UI.getCurrent().getPage().reload();
+
+            });
+
         });
 
         add(div);
