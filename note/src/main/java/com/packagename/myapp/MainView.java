@@ -28,6 +28,7 @@ import org.vaadin.gatanaso.MultiselectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -76,6 +77,8 @@ public class MainView extends VerticalLayout {
         Button changeview_button = new Button();
         Button clear_filters = new Button("Clear filter");
 
+        Button button_export = new Button("Export");
+
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
 
         Checkbox date = new Checkbox("Sort Date");
@@ -122,6 +125,16 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+        button_export.addClickListener(test ->
+        {
+            try {
+                exportDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
         clear_filters.addClickListener(clear_filter_event ->{
             filter_pri.setValue(filter_pri_ = "");
             filter_cat.setValue(filter_cat_ = "");
@@ -164,7 +177,7 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        add(textField_filename, textArea, horizont_add_cat_pri, button_save, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+        add(textField_filename, textArea, horizont_add_cat_pri, button_save,button_export, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
     }
 
     /**
@@ -316,6 +329,7 @@ public class MainView extends VerticalLayout {
 
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         Div div = new Div();
+
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
         delete_button.addClassName("delete_button");
@@ -365,6 +379,8 @@ public class MainView extends VerticalLayout {
             notification.open();
             UI.getCurrent().getPage().reload();
         });
+
+
 
         done.setValue(note.getDone_());
         done.addClickListener(event -> {
@@ -571,6 +587,18 @@ public class MainView extends VerticalLayout {
                 categoryInterface.save(cat);
             });
         }
+    }
+    private void exportDatabase() throws IOException {
+      
+        String dbName = "notedb";
+        String dbUser = "root";
+        String dbPass = "password";
+
+        String executeCmd = "";
+        executeCmd = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r backup.sql";
+
+     Runtime.getRuntime().exec(executeCmd);
+
     }
 
 
