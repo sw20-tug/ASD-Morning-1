@@ -641,10 +641,16 @@ public class MainView extends VerticalLayout {
         catch(Exception exception) { exception.printStackTrace(); }
     }
     private void exportDatabase() throws IOException {
-      
+
         String dbName = "notedb";
         String dbUser = "root";
         String dbPass = "password";
+        String executeCmd = "";
+        executeCmd = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r backup.sql";
+
+        Runtime.getRuntime().exec(executeCmd);
+
+    }
 
     public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
     {
@@ -677,12 +683,7 @@ public class MainView extends VerticalLayout {
         try {message.setContent(msg, "text/html"); message.setSubject(note.getTitle_()); }
         catch(Exception e) {e.printStackTrace();}
     }
-        String executeCmd = "";
-        executeCmd = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r backup.sql";
 
-     Runtime.getRuntime().exec(executeCmd);
-
-    }
 
 
 }
