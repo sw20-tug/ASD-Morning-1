@@ -32,9 +32,10 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 
-import java.awt.*;
 import java.util.List;
 
 @Route
@@ -44,6 +45,8 @@ import java.util.List;
         enableInstallPrompt = true)
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
+
+
 public class MainView extends VerticalLayout {
 
     enum AppliedFilters{
@@ -428,11 +431,7 @@ public class MainView extends VerticalLayout {
             dialog.add(horizont);
 
             send_mail.addClickListener(eventSave -> {
-                String mail_subject = "";
-                String mail_content = "";
-
-                mail_subject = note.getTitle_();
-                mail_content = note.getText_();
+                sendEmail(emailField, note, noteCategoryInterface, categoryInterface);
 
                 UI.getCurrent().getPage().reload();
 
@@ -441,8 +440,6 @@ public class MainView extends VerticalLayout {
         });
 
         add(div);
-
-
     }
 
 
@@ -605,7 +602,60 @@ public class MainView extends VerticalLayout {
             });
         }
     }
+    public void sendEmail(EmailField emailField, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        String from = "asdmorning1.2020@gmail.com";
+        String password = "ASDmorning1!";
+        String smtp = "smtp.gmail.com";
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", smtp);
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.port", "587");
+        Session session = Session.getInstance(properties,  new JAuthenticator(properties, new PasswordAuthentication(from, password)));
+        MimeMessage message = new MimeMessage(session);
+        try {
+            message.setFrom(new InternetAddress(from));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(emailField.getValue()));
+            setFormattedMessageContent(message, note, noteCategoryInterface, categoryInterface);
+            Transport sending = session.getTransport("smtp");
+            sending.connect(smtp, from, password);
+            sending.sendMessage(message, message.getAllRecipients());
+        }
+        catch(Exception exception) { exception.printStackTrace(); }
+    }
 
+    public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        Set<String> cats = fillCategories(note.getId_(), noteCategoryInterface, categoryInterface);
+        String msg = "        <html>\n" +
+                "<head>\n" +
+                "\t<title></title>\n" +
+                "</head>\n" +
+                "<body>A user shared his note with you:\n\n" +
+                "<h1><span style=\"font-size:14px\"><strong></h1>Note Title: </strong></span><span style=\"font-size:14\">"
+                + note.getTitle_() + "</strong></span>\n" +
+                "<h1><span style=\"font-size:14px\">Note: </span></h1>\n" +
+                "<blockquote>\n" +
+                "<p><span style=\"font-size:14px\">"+ note.getText_() +"</span><br />\n&nbsp;</p>\n" +
+                "</blockquote>\n" +
+                "<p><span style=\"font-size:14px\"><strong>Priority: </strong>" +note.getPriority()+"<br />\n" +
+                "<br />\n" +
+                "<br />\n" +
+                "<strong>Categories: </strong>"+cats.toString().substring(1, (cats.toString()).length()-1)+
+                "</span><br />\n" +
+                "<br />\n" +
+                "            Kind regards<br />\n" +
+                "        Your ASD-Morning-1 develop team</p>\n" +
+                "\n" +
+                "<blockquote>\n" +
+                "<h1>&nbsp;</h1>\n" +
+                "</blockquote>\n" +
+                "</body>\n" +
+                "</html>";
+        try {message.setContent(msg, "text/html"); message.setSubject(note.getTitle_()); }
+        catch(Exception e) {e.printStackTrace();}
+    }
 
 }
 
