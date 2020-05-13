@@ -30,6 +30,8 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 
 
 import java.io.IOException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -62,6 +64,7 @@ public class MainView extends VerticalLayout {
     static String filter_pri_ = "";
     static LocalDate date_from_ = null;
     static LocalDate date_until_ = null;
+    static Integer export_counter = 0;
 
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
@@ -645,10 +648,10 @@ public class MainView extends VerticalLayout {
         String dbName = "notedb";
         String dbUser = "root";
         String dbPass = "password";
-        String executeCmd = "";
-        executeCmd = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r backup.sql";
-
-        Runtime.getRuntime().exec(executeCmd);
+        String export = "";
+        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export_" + export_counter.toString() + ".sql";
+        export_counter++;
+        Runtime.getRuntime().exec(export);
 
     }
 
