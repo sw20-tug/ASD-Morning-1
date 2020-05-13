@@ -10,10 +10,22 @@
   max-width: 1000px;
 }
 .delete_button{
+  margin-left: 10px;
   background-color: #ff6161;
   color: black;
 }
 
 .button {
   color: black;
+}
+
+.share_button {
+  margin-left: 10px;
+  background-color: #26a5ff;
+  color: black;
+}
+
+.v-textarea {
+  border:     none !important;
+  background: white; /* Has shading image by default */
 }

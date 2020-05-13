@@ -174,9 +174,8 @@ public class MainView extends VerticalLayout {
         //filter buttons
         HorizontalLayout filter_buttons = new HorizontalLayout();
         filter_buttons.add(changeview_button, clear_filters);
+        filter_buttons.getStyle().set("margin-left", "75px");
 
-        button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        button_save.addClassName("button");
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
@@ -198,9 +197,6 @@ public class MainView extends VerticalLayout {
         filter_div.add(horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
 
         add(input_div, text_area_div, save_button_div, line, filter_div);
-
-
-
 
     }
 
@@ -265,7 +261,8 @@ public class MainView extends VerticalLayout {
     }
 
 
-    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface, AppliedFilters filter)
+    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface,
+                               CategoryInterface categoryInterface, AppliedFilters filter)
     {
         switch(filter)
         {
@@ -350,25 +347,38 @@ public class MainView extends VerticalLayout {
     }
 
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
-        Div div = new Div();
+        Div div_text = new Div();
+        Div div_buttons = new Div();
 
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
+
+        Button share_button = new Button("Share");
+
         delete_button.addClassName("delete_button");
         button.addClassName("button");
+        share_button.addClassName("share_button");
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
         Icon icon = new Icon(VaadinIcon.PIN);
         Button pin = new Button(icon);
+        pin.getStyle().set("background-color", "white");
+        pin.getStyle().set("margin-top", "40px");
+        pin.getStyle().set("margin-left", "10px");
 
         String cats = fillCategories(note.getId_(),noteCategoryInterface, categoryInterface).toString();
-        TextArea categories = new TextArea();
+        TextField categories = new TextField("Category:");
+        categories.addClassName("priorities");
+        categories.getStyle().set("maxWidth", "100px");
         categories.setValue(cats.substring(1, cats.length() - 1));
         categories.setReadOnly(true);
 
-        TextArea priorities = new TextArea();
+
+        TextField priorities = new TextField("Priority:");
+        priorities.addClassName("priorities");
+        priorities.getStyle().set("maxWidth", "50px");
         priorities.setValue(note.getPriority().toString());
         priorities.setReadOnly(true);
         HorizontalLayout horizontal = new HorizontalLayout();
@@ -378,11 +388,25 @@ public class MainView extends VerticalLayout {
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
         Checkbox done = new Checkbox("Done");
+        done.getStyle().set("margin-left", "5px");
 
-        horizontal.add(textField, priorities, categories);
+        horizontal.add(textField, priorities, categories, pin);
+        horizontal.getStyle().set("width", "100%");
+        horizontal.getStyle().set("display", "flex");
+        horizontal.getStyle().set("align-items", "center");
+        horizontal.getStyle().set("justify-content", "center");
+
         textField.setReadOnly(true);
 
-        div.add(horizontal, button, delete_button, done, pin);
+        div_text.add(horizontal);
+        div_text.getStyle().set("width", "100%");
+        div_text.getStyle().set("display", "flex");
+        div_text.getStyle().set("align-items", "center");
+        div_text.getStyle().set("justify-content", "center");
+
+        div_buttons.add(button, delete_button, share_button, done);
+        div_buttons.getStyle().set("margin-left", "215px");
+
         Dialog dialog = new Dialog();
         Button save = new Button("Save");
 
@@ -432,9 +456,7 @@ public class MainView extends VerticalLayout {
                 UI.getCurrent().getPage().reload();
 
             });
-
         });
-
 
         delete_button.addClickListener(event -> {
             deleteCategoryMap(note, noteCategoryInterface);
@@ -443,10 +465,9 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        add(div);
-
-
+        add(div_text, div_buttons);
     }
+
 
 
     public Note saveToDatabase(String filename, String text, Integer priority, NoteInterface notes)
