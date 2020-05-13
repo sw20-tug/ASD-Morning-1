@@ -18,6 +18,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -32,9 +33,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 
-import java.awt.*;
 import java.util.List;
 
 @Route
@@ -44,6 +46,8 @@ import java.util.List;
         enableInstallPrompt = true)
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
+
+
 public class MainView extends VerticalLayout {
 
     enum AppliedFilters{
@@ -332,8 +336,10 @@ public class MainView extends VerticalLayout {
 
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
+        Button share_button = new Button("Share");
         delete_button.addClassName("delete_button");
         button.addClassName("button");
+        share_button.addClassName("share_button");
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
@@ -360,7 +366,7 @@ public class MainView extends VerticalLayout {
         horizontal.add(textField, priorities, categories);
         textField.setReadOnly(true);
 
-        div.add(horizontal, button, delete_button, done, pin);
+        div.add(horizontal, button, delete_button, share_button, done, pin);
         Dialog dialog = new Dialog();
         Button save = new Button("Save");
 
@@ -369,6 +375,13 @@ public class MainView extends VerticalLayout {
         textArea.setValue(note.getText_());
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
+
+        EmailField emailField = new EmailField("share with: (email)");
+        emailField.setClearButtonVisible(true);
+        emailField.setErrorMessage("Please enter a valid email adress.");
+
+        Button send_mail = new Button("Send");
+        send_mail.addClassName("share_button");
 
         Notification notification = new Notification(
                 "Pinned note", 3000);
@@ -423,9 +436,26 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+        share_button.addClickListener(event -> {
+            dialog.open();
+            dialog.setWidth("500px");
+            dialog.setHeight("250px");
+            dialog.add(emailField);
+            HorizontalLayout horizont = new HorizontalLayout();
+
+            horizont.add(send_mail);
+            dialog.add(horizont);
+
+            send_mail.addClickListener(eventSave -> {
+                sendEmail(emailField, note, noteCategoryInterface, categoryInterface);
+
+                UI.getCurrent().getPage().reload();
+
+            });
+
+        });
+
         add(div);
-
-
     }
 
 
@@ -588,12 +618,65 @@ public class MainView extends VerticalLayout {
             });
         }
     }
+    public void sendEmail(EmailField emailField, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        String from = "asdmorning1.2020@gmail.com";
+        String password = "ASDmorning1!";
+        String smtp = "smtp.gmail.com";
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", smtp);
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.port", "587");
+        Session session = Session.getInstance(properties,  new JAuthenticator(properties, new PasswordAuthentication(from, password)));
+        MimeMessage message = new MimeMessage(session);
+        try {
+            message.setFrom(new InternetAddress(from));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(emailField.getValue()));
+            setFormattedMessageContent(message, note, noteCategoryInterface, categoryInterface);
+            Transport sending = session.getTransport("smtp");
+            sending.connect(smtp, from, password);
+            sending.sendMessage(message, message.getAllRecipients());
+        }
+        catch(Exception exception) { exception.printStackTrace(); }
+    }
     private void exportDatabase() throws IOException {
       
         String dbName = "notedb";
         String dbUser = "root";
         String dbPass = "password";
 
+    public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        Set<String> cats = fillCategories(note.getId_(), noteCategoryInterface, categoryInterface);
+        String msg = "        <html>\n" +
+                "<head>\n" +
+                "\t<title></title>\n" +
+                "</head>\n" +
+                "<body>A user shared his note with you:\n\n" +
+                "<h1><span style=\"font-size:14px\"><strong></h1>Note Title: </strong></span><span style=\"font-size:14\">"
+                + note.getTitle_() + "</strong></span>\n" +
+                "<h1><span style=\"font-size:14px\">Note: </span></h1>\n" +
+                "<blockquote>\n" +
+                "<p><span style=\"font-size:14px\">"+ note.getText_() +"</span><br />\n&nbsp;</p>\n" +
+                "</blockquote>\n" +
+                "<p><span style=\"font-size:14px\"><strong>Priority: </strong>" +note.getPriority()+"<br />\n" +
+                "<br />\n" +
+                "<br />\n" +
+                "<strong>Categories: </strong>"+cats.toString().substring(1, (cats.toString()).length()-1)+
+                "</span><br />\n" +
+                "<br />\n" +
+                "            Kind regards<br />\n" +
+                "        Your ASD-Morning-1 develop team</p>\n" +
+                "\n" +
+                "<blockquote>\n" +
+                "<h1>&nbsp;</h1>\n" +
+                "</blockquote>\n" +
+                "</body>\n" +
+                "</html>";
+        try {message.setContent(msg, "text/html"); message.setSubject(note.getTitle_()); }
+        catch(Exception e) {e.printStackTrace();}
+    }
         String executeCmd = "";
         executeCmd = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r backup.sql";
 
