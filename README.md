@@ -36,4 +36,4 @@ When the application is running open http://localhost:8080/
 
 When u change something in the code u have to press "install" again in the maven directory!
 
-
+#Test
