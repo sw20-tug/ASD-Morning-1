@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.vaadin.gatanaso.MultiselectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import sun.jvm.hotspot.debugger.win32.coff.ExportDirectoryTable;
 
 
 import java.awt.*;
@@ -60,12 +61,14 @@ public class MainView extends VerticalLayout {
     }
 
     public enum Language{
-        BUTTON_CLEAR(0),
-        BUTTON_EXPORT(1),
-        UNFINISHED(2),
-        FINISHED(3),
-        LABEL_ADD(1000);
-        //LABEL_CLEAR
+        BUTTON_CLEAR(0), BUTTON_EXPORT(1), UNFINISHED(2), FINISHED(3),
+        SORT_DATE(4), SORT_TITLE(5), CATEGORIES(6), DATE_FROM(7),
+        DATE_UNTIL(8), WRITE_HERE(9), SAVE_NOTE(10),
+        APPLY_FILTER(11), EDIT(12), DELETE(13), SHARE(14),
+        DONE(15), SAVE(16), SHARE_WITH(17), VALID_EMAIL(18),
+        SEND(19), CLOSE(20), PRIORITY(21), PRIORITY_FILLING(22),
+        CATEGORY(23), CATEGORY_FILLING(24), SCHOOL(25), SHOPPING(26),
+        HOME(27), WORK(28), WORKOUT(29), TITLE(30), IMPORT(31), EXPORT(32);
 
         int index;
 
@@ -107,8 +110,8 @@ public class MainView extends VerticalLayout {
 
     private void languageSelect()
     {
-        Button button_export = new Button("Export");
-        Button button_import = new Button("Import");
+        Button button_export = new Button(languages[Language.EXPORT.getIndex()][language]);
+        Button button_import = new Button(languages[Language.IMPORT.getIndex()][language]);
         button_import.getStyle().set("margin-left", "530px");
 
     button_export.addClickListener(test ->
@@ -165,14 +168,13 @@ public class MainView extends VerticalLayout {
             {"Löschen", "Clear", "Effacer"},
             {"Exportieren", "Export", "Exportation"},
             {"Zeige Vollendet", "Show finished", "Spectacle terminé"},
-            {"Zeige Unvollendet", "Show Unfinished", "Afficher inachevé"},
+            {"Zeige Unvollendete", "Show Unfinished", "Afficher inachevé"},
             {"Sortiere nach Datum", "Sort Date", "Date de tri"},
             {"Sortiere nach Titel", "Sort Title", "Trier le titre"},
             {"Kategorien", "Categories", "Les catégories"},
             {"Datum von", "Date from", "Dater de"},
             {"Datum bis", "Date until", "Date jusqu'au"},
             {"Hier schreiben...", "Write here...", "Ecrire ici..."},
-            {"Geben Sie den Namen Ihrer Notiz ein:", "Enter name of your note:", "Entrez le nom de votre note:"},
             {"Notiz speichern", "Save note", "Enregistrer la note"},
             {"Filter anwenden", "Apply filter", "Appliquer le filtre"},
             {"Ändern", "Edit", "Éditer"},
@@ -186,14 +188,16 @@ public class MainView extends VerticalLayout {
             {"Schließen", "Close", "proche"},
             {"Priorität", "Priority", "Priorité"},
             {"Priorität muss ausgefüllt werden!", "Priority must be filled in!", "La priorité doit être remplie!"},
-            {"Kategorie", "Category", "Catégorie"},
-            {"Kategorien", "Categories", "Les catégories"},
+            {"Kategorie:", "Category:", "Catégorie:"},
             {"Kategorie muss ausgefüllt werden!", "Category must be filled in!", "La catégorie doit être remplie!"},
             {"Schule", "School", "École"},
             {"Einkaufen", "Shopping", "Achats"},
             {"Zuhause", "Home", "Accueil"},
             {"Arbeiten", "Work", "Travail"},
             {"Training", "Workout", "Faire des exercices"},
+            {"Titel", "Title", "Titre"},
+            {"Importieren", "Import", "Importation"},
+            {"Exportieren", "Export", "Exportation"},
     };
 
 
@@ -226,37 +230,37 @@ public class MainView extends VerticalLayout {
         button_export.setText(languages[Language.BUTTON_EXPORT.getIndex()][language]);
 
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? (languages[Language.FINISHED.getIndex()][language]) : (languages[Language.UNFINISHED.getIndex()][language]) );
-        Checkbox date = new Checkbox("Sort Date");
+        Checkbox date = new Checkbox(languages[Language.SORT_DATE.getIndex()][language]);
         date.setValue(date_);
-        Checkbox title = new Checkbox("Sort Title");
+        Checkbox title = new Checkbox(languages[Language.SORT_TITLE.getIndex()][language]);
         title.setValue(title_);
 
         ComboBox<String>filter_pri = createPriorityInput(true);
         filter_pri.setValue(filter_pri_);
 
-        ComboBox<String> filter_cat = new ComboBox<>("Categories");
+        ComboBox<String> filter_cat = new ComboBox<>(languages[Language.CATEGORIES.getIndex()][language]);
         filter_cat.setItems(getCategories(categoryInterface));
         filter_cat.setValue(filter_cat_);
 
-        DatePicker filter_date_from = new  DatePicker("Date from");
+        DatePicker filter_date_from = new  DatePicker(languages[Language.DATE_FROM.getIndex()][language]);
         filter_date_from.setValue(date_from_);
 
-        DatePicker filter_date_until = new  DatePicker("Date until");
+        DatePicker filter_date_until = new  DatePicker(languages[Language.DATE_UNTIL.getIndex()][language]);
         filter_date_until.setValue(date_until_);
 
         unfinished_finished.setValue(!show_unfinished);
 
         TextArea textArea = new TextArea();
-        textArea.setPlaceholder("Write here...");
+        textArea.setPlaceholder(languages[Language.WRITE_HERE.getIndex()][language]);
         textArea.getStyle().set("height,", "2000px");
         textArea.getStyle().set("width", "605px");
 
-        TextField textField_filename = new TextField("Title:");
+        TextField textField_filename = new TextField(languages[Language.TITLE.getIndex()][language]);
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
 
-        Button button_save = new Button("Save note");
+        Button button_save = new Button(languages[Language.SAVE_NOTE.getIndex()][language]);
 
         button_save.addClickListener(event->{
 
@@ -308,7 +312,7 @@ public class MainView extends VerticalLayout {
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
-        changeview_button.setText("Apply filter");
+        changeview_button.setText(languages[Language.APPLY_FILTER.getIndex()][language]);
         changeview_button.addClickListener(event->{
             show_unfinished = !unfinished_finished.getValue();
             title_ = title.getValue();
@@ -479,10 +483,10 @@ public class MainView extends VerticalLayout {
         Div div_text = new Div();
         Div div_buttons = new Div();
 
-        Button button = new Button("Edit");
-        Button delete_button = new Button("Delete");
+        Button button = new Button(languages[Language.EDIT.getIndex()][language]);
+        Button delete_button = new Button(languages[Language.DELETE.getIndex()][language]);
 
-        Button share_button = new Button("Share");
+        Button share_button = new Button(languages[Language.SHARE.getIndex()][language]);
 
         delete_button.addClassName("delete_button");
         button.addClassName("button");
@@ -498,14 +502,14 @@ public class MainView extends VerticalLayout {
         pin.getStyle().set("margin-left", "10px");
 
         String cats = fillCategories(note.getId_(),noteCategoryInterface, categoryInterface).toString();
-        TextField categories = new TextField("Category:");
+        TextField categories = new TextField(languages[Language.CATEGORY.getIndex()][language]);
         categories.addClassName("priorities");
         categories.getStyle().set("maxWidth", "100px");
         categories.setValue(cats.substring(1, cats.length() - 1));
         categories.setReadOnly(true);
 
 
-        TextField priorities = new TextField("Priority:");
+        TextField priorities = new TextField(languages[Language.PRIORITY.getIndex()][language]);
         priorities.addClassName("priorities");
         priorities.getStyle().set("maxWidth", "50px");
         priorities.setValue(note.getPriority().toString());
@@ -516,7 +520,7 @@ public class MainView extends VerticalLayout {
         textField.setValue(note.getText_());
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
-        Checkbox done = new Checkbox("Done");
+        Checkbox done = new Checkbox(languages[Language.DONE.getIndex()][language]);
         done.getStyle().set("margin-left", "5px");
 
         horizontal.add(textField, priorities, categories, pin);
@@ -535,7 +539,7 @@ public class MainView extends VerticalLayout {
 
 
         Dialog dialog = new Dialog();
-        Button save = new Button("Save");
+        Button save = new Button(languages[Language.SAVE.getIndex()][language]);
 
 
         TextArea textArea = new TextArea(note.getTitle_());
@@ -543,11 +547,11 @@ public class MainView extends VerticalLayout {
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
 
-        EmailField emailField = new EmailField("share with: (email)");
+        EmailField emailField = new EmailField(languages[Language.SHARE_WITH.getIndex()][language]);
         emailField.setClearButtonVisible(true);
-        emailField.setErrorMessage("Please enter a valid email adress.");
+        emailField.setErrorMessage(languages[Language.VALID_EMAIL.getIndex()][language]);
 
-        Button send_mail = new Button("Send");
+        Button send_mail = new Button(languages[Language.SEND.getIndex()][language]);
         send_mail.addClassName("share_button");
 
         div_buttons.add(button, delete_button, share_button, done);
@@ -734,7 +738,7 @@ public class MainView extends VerticalLayout {
         {
             Dialog dialog = new Dialog();
             Div div = new Div();
-            Button button = new Button("Close");
+            Button button = new Button(languages[Language.CLOSE.getIndex()][language]);
             TextArea textarea = new TextArea();
             dialog.open();
             textarea.setValue((category.isEmpty()) ? (category.getErrorMessage()) : (priority.getErrorMessage()));
@@ -750,13 +754,13 @@ public class MainView extends VerticalLayout {
     public ComboBox<String> createPriorityInput(Boolean filter)
     {
         ComboBox<String> priority = new ComboBox<>();
-        priority.setLabel("Priority");
+        priority.setLabel(languages[Language.PRIORITY.getIndex()][language]);
         priority.setItems(setPriorities());
         if(!filter)
         {
             priority.setRequired(true);
             priority.setRequiredIndicatorVisible(true);
-            priority.setErrorMessage("Priority must be filled in!");
+            priority.setErrorMessage(languages[Language.PRIORITY_FILLING.getIndex()][language]);
         }
         return priority;
     }
@@ -764,12 +768,12 @@ public class MainView extends VerticalLayout {
     public MultiselectComboBox<String> createCategoryInput(CategoryInterface categoryInterface)
     {
         MultiselectComboBox<String> category = new MultiselectComboBox<>();
-        category.setLabel("Category");
-        category.setLabel("Categories");
+        category.setLabel(languages[Language.CATEGORY.getIndex()][language]);
+        category.setLabel(languages[Language.CATEGORIES.getIndex()][language]);
         category.setItems(getCategories(categoryInterface));
         category.setRequired(true);
         category.setRequiredIndicatorVisible(true);
-        category.setErrorMessage("Category must be filled in!");
+        category.setErrorMessage(languages[Language.CATEGORY_FILLING.getIndex()][language]);
 
         return category;
     }
@@ -778,7 +782,9 @@ public class MainView extends VerticalLayout {
     {
         if(categoryInterface.findAll().isEmpty())
         {
-            Set<String> cat_names = new HashSet<String>(Arrays.asList("School", "Shopping", "Home", "Work", "Workout"));
+            Set<String> cat_names = new HashSet<String>(Arrays.asList(languages[Language.SCHOOL.getIndex()][language],
+                    languages[Language.SHOPPING.getIndex()][language], languages[Language.HOME.getIndex()][language],
+                    languages[Language.WORK.getIndex()][language], languages[Language.WORKOUT.getIndex()][language]));
             cat_names.forEach(cat_nam -> {
                 Category cat = new Category(cat_nam);
                 categoryInterface.save(cat);
