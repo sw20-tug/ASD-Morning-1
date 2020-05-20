@@ -13,6 +13,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -29,6 +30,7 @@ import org.vaadin.gatanaso.MultiselectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 
 
+import java.awt.*;
 import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -37,6 +39,7 @@ import java.time.ZoneId;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
+import javax.swing.*;
 
 
 import java.util.List;
@@ -77,9 +80,8 @@ public class MainView extends VerticalLayout {
     }
 
 
+    static boolean show_unfinished = true;
 
-
-        static boolean show_unfinished = true;
     static boolean date_ = false;
     static boolean title_ = false;
     static String filter_cat_ = "";
@@ -101,8 +103,63 @@ public class MainView extends VerticalLayout {
             showfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
         }
     }
-
     static int language = 0;
+
+    private void languageSelect()
+    {
+        Button button_export = new Button("Export");
+        Button button_import = new Button("Import");
+        button_import.getStyle().set("margin-left", "530px");
+
+    button_export.addClickListener(test ->
+        {
+            try {
+                exportDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        button_import.addClickListener(test ->
+        {
+            try {
+                importDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        HorizontalLayout languages = new HorizontalLayout();
+
+        Button de = new Button("Deutsch");
+        Button en = new Button("English");
+        Button fr = new Button("French");
+
+        de.addClassName("language");
+        en.addClassName("language");
+        fr.addClassName("language");
+
+        languages.add(de, en, fr, button_import, button_export);
+
+        de.addClickListener(event->{
+            language = 0;
+            UI.getCurrent().getPage().reload();
+        });
+        en.addClickListener(event->{
+            language = 1;
+            UI.getCurrent().getPage().reload();
+        });
+        fr.addClickListener(event->{
+            language = 2;
+            UI.getCurrent().getPage().reload();
+        });
+
+        add(languages);
+    }
+
+
     //static String [] label_clear = {"Löschen", "Clear", "Effacer"};
     static String[][] languages = {
             {"Löschen", "Clear", "Effacer"},
@@ -139,34 +196,31 @@ public class MainView extends VerticalLayout {
             {"Training", "Workout", "Faire des exercices"},
     };
 
-    private void languageSelect()
-    {
-        HorizontalLayout languages = new HorizontalLayout();
-        Button de = new Button("Deutsch");
-        Button en = new Button("English");
-        Button fr = new Button("French");
-        languages.add(de, en, fr);
-
-        de.addClickListener(event->{
-            language = 0;
-            UI.getCurrent().getPage().reload();
-        });
-        en.addClickListener(event->{
-            language = 1;
-            UI.getCurrent().getPage().reload();
-        });
-        fr.addClickListener(event->{
-            language = 2;
-            UI.getCurrent().getPage().reload();
-        });
-        add(languages);
-    }
 
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
         Button changeview_button = new Button();
         Button clear_filters = new Button();
         clear_filters.setText(languages[Language.BUTTON_CLEAR.getIndex()][language]);
+        Div input_div = new Div();
+        input_div.getStyle().set("width", "100%");
+        input_div.getStyle().set("display", "flex");
+        input_div.getStyle().set("align-items", "center");
+        input_div.getStyle().set("justify-content", "center");
+        Div text_area_div = new Div();
+        text_area_div.getStyle().set("width", "100%");
+        text_area_div.getStyle().set("display", "flex");
+        text_area_div.getStyle().set("align-items", "center");
+        text_area_div.getStyle().set("justify-content", "center");
+        Div save_button_div = new Div();
+        save_button_div.getStyle().set("width", "100%");
+        save_button_div.getStyle().set("display", "flex");
+        save_button_div.getStyle().set("align-items", "center");
+        save_button_div.getStyle().set("justify-content", "center");
+        Div filter_div = new Div();
+        filter_div.getStyle().set("width", "100%");
+        Div line = new Div();
+        line.getStyle().set("width","100%").set("border-top","4px solid grey");
 
         Button button_export = new Button();
         button_export.setText(languages[Language.BUTTON_EXPORT.getIndex()][language]);
@@ -176,7 +230,6 @@ public class MainView extends VerticalLayout {
         date.setValue(date_);
         Checkbox title = new Checkbox("Sort Title");
         title.setValue(title_);
-
 
         ComboBox<String>filter_pri = createPriorityInput(true);
         filter_pri.setValue(filter_pri_);
@@ -191,15 +244,14 @@ public class MainView extends VerticalLayout {
         DatePicker filter_date_until = new  DatePicker("Date until");
         filter_date_until.setValue(date_until_);
 
-
         unfinished_finished.setValue(!show_unfinished);
 
         TextArea textArea = new TextArea();
         textArea.setPlaceholder("Write here...");
-        textArea.getStyle().set("minHeight,", "1000px");
-        textArea.getStyle().set("minWidth", "300px");
+        textArea.getStyle().set("height,", "2000px");
+        textArea.getStyle().set("width", "605px");
 
-        TextField textField_filename = new TextField("Enter name of your note:");
+        TextField textField_filename = new TextField("Title:");
 
         ComboBox<String> priority = createPriorityInput(false);
         MultiselectComboBox<String> category = createCategoryInput(categoryInterface);
@@ -216,16 +268,6 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        button_export.addClickListener(test ->
-        {
-            try {
-                exportDatabase();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
-
         clear_filters.addClickListener(clear_filter_event ->{
             filter_pri.setValue(filter_pri_ = "");
             filter_cat.setValue(filter_cat_ = "");
@@ -235,24 +277,34 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+
         //filter Comboboxes
         HorizontalLayout horizont_filter_comboboxes = new HorizontalLayout();
         horizont_filter_comboboxes.add(filter_pri, filter_cat, filter_date_from, filter_date_until);
+        horizont_filter_comboboxes.getStyle().set("width", "100%");
+        horizont_filter_comboboxes.getStyle().set("display", "flex");
+        horizont_filter_comboboxes.getStyle().set("align-items", "center");
+        horizont_filter_comboboxes.getStyle().set("justify-content", "center");
+
 
         //Fields for category and priority input
         HorizontalLayout horizont_add_cat_pri = new HorizontalLayout();
-        horizont_add_cat_pri.add(category, priority);
+        horizont_add_cat_pri.add(textField_filename, category, priority);
 
         //filter Checkboxes
         HorizontalLayout horizont_filter_checkboxes = new HorizontalLayout();
         horizont_filter_checkboxes.add(title, date,  unfinished_finished);
+        horizont_filter_checkboxes.getStyle().set("width", "100%");
+        horizont_filter_checkboxes.getStyle().set("display", "flex");
+        horizont_filter_checkboxes.getStyle().set("align-items", "center");
+        horizont_filter_checkboxes.getStyle().set("justify-content", "center");
+
 
         //filter buttons
         HorizontalLayout filter_buttons = new HorizontalLayout();
         filter_buttons.add(changeview_button, clear_filters);
+        filter_buttons.getStyle().set("margin-left", "75px");
 
-        button_save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        button_save.addClassName("button");
 
         // Use custom CSS classes to apply styling. This is defined in shared-styles.css.
         addClassName("centered-content");
@@ -268,7 +320,13 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        add(textField_filename, textArea, horizont_add_cat_pri, button_save,button_export, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+        save_button_div.add(button_save);
+        text_area_div.add(textArea);
+        input_div.add(horizont_add_cat_pri);
+        filter_div.add(horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+
+        add(input_div, text_area_div, save_button_div, line, filter_div);
+
     }
 
     /**
@@ -332,7 +390,8 @@ public class MainView extends VerticalLayout {
     }
 
 
-    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface, AppliedFilters filter)
+    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface,
+                               CategoryInterface categoryInterface, AppliedFilters filter)
     {
         switch(filter)
         {
@@ -376,8 +435,6 @@ public class MainView extends VerticalLayout {
 
     private AppliedFilters checkFiltering(List<Note> notes, NoteInterface noteInterface)
     {
-
-
         if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ != null && date_until_ != null)
             return AppliedFilters.PRI_CAT_DATE;
         else if(!filter_pri_.isEmpty() && !filter_cat_.isEmpty() && date_from_ == null && date_until_ == null)
@@ -419,11 +476,14 @@ public class MainView extends VerticalLayout {
     }
 
     private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
-        Div div = new Div();
+        Div div_text = new Div();
+        Div div_buttons = new Div();
 
         Button button = new Button("Edit");
         Button delete_button = new Button("Delete");
+
         Button share_button = new Button("Share");
+
         delete_button.addClassName("delete_button");
         button.addClassName("button");
         share_button.addClassName("share_button");
@@ -433,13 +493,21 @@ public class MainView extends VerticalLayout {
 
         Icon icon = new Icon(VaadinIcon.PIN);
         Button pin = new Button(icon);
+        pin.getStyle().set("background-color", "white");
+        pin.getStyle().set("margin-top", "40px");
+        pin.getStyle().set("margin-left", "10px");
 
         String cats = fillCategories(note.getId_(),noteCategoryInterface, categoryInterface).toString();
-        TextArea categories = new TextArea();
+        TextField categories = new TextField("Category:");
+        categories.addClassName("priorities");
+        categories.getStyle().set("maxWidth", "100px");
         categories.setValue(cats.substring(1, cats.length() - 1));
         categories.setReadOnly(true);
 
-        TextArea priorities = new TextArea();
+
+        TextField priorities = new TextField("Priority:");
+        priorities.addClassName("priorities");
+        priorities.getStyle().set("maxWidth", "50px");
         priorities.setValue(note.getPriority().toString());
         priorities.setReadOnly(true);
         HorizontalLayout horizontal = new HorizontalLayout();
@@ -449,11 +517,23 @@ public class MainView extends VerticalLayout {
         textField.getStyle().set("minHeight,", "1000px");
         textField.getStyle().set("minWidth", "300px");
         Checkbox done = new Checkbox("Done");
+        done.getStyle().set("margin-left", "5px");
 
-        horizontal.add(textField, priorities, categories);
+        horizontal.add(textField, priorities, categories, pin);
+        horizontal.getStyle().set("width", "100%");
+        horizontal.getStyle().set("display", "flex");
+        horizontal.getStyle().set("align-items", "center");
+        horizontal.getStyle().set("justify-content", "center");
+
         textField.setReadOnly(true);
 
-        div.add(horizontal, button, delete_button, share_button, done, pin);
+        div_text.add(horizontal);
+        div_text.getStyle().set("width", "100%");
+        div_text.getStyle().set("display", "flex");
+        div_text.getStyle().set("align-items", "center");
+        div_text.getStyle().set("justify-content", "center");
+
+
         Dialog dialog = new Dialog();
         Button save = new Button("Save");
 
@@ -469,6 +549,10 @@ public class MainView extends VerticalLayout {
 
         Button send_mail = new Button("Send");
         send_mail.addClassName("share_button");
+
+        div_buttons.add(button, delete_button, share_button, done);
+        div_buttons.getStyle().set("margin-left", "215px");
+
 
         Notification notification = new Notification(
                 "Pinned note", 3000);
@@ -512,9 +596,7 @@ public class MainView extends VerticalLayout {
                 UI.getCurrent().getPage().reload();
 
             });
-
         });
-
 
         delete_button.addClickListener(event -> {
             deleteCategoryMap(note, noteCategoryInterface);
@@ -541,10 +623,8 @@ public class MainView extends VerticalLayout {
             });
 
         });
-
-        add(div);
+        add(div_text, div_buttons);
     }
-
 
     public Note saveToDatabase(String filename, String text, Integer priority, NoteInterface notes)
     {
@@ -733,9 +813,19 @@ public class MainView extends VerticalLayout {
         String dbUser = "root";
         String dbPass = "password";
         String export = "";
-        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export_" + export_counter.toString() + ".sql";
+        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export.sql";
         export_counter++;
         Runtime.getRuntime().exec(export);
+
+    }
+
+    private void importDatabase() throws IOException {
+
+        String dbName = "notedb";
+        String dbUser = "root";
+        String dbPass = "password";
+        String[] importdb = {"/bin/sh" , "-c", "mysql -u" + dbUser+ " -p"+dbPass+" " + dbName + " < export.sql"};
+        Runtime.getRuntime().exec(importdb);
 
     }
 

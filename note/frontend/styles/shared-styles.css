@@ -7,9 +7,10 @@
 /* Example: CSS class name to center align the content . */
 .centered-content {
   margin: 0 auto;
-  max-width: 250px;
+  max-width: 1000px;
 }
 .delete_button{
+  margin-left: 10px;
   background-color: #ff6161;
   color: black;
 }
@@ -18,7 +19,18 @@
   color: black;
 }
 
+.language {
+  background-color: white;
+  background-image: url("flags/de.png");
+}
+
 .share_button {
-  background-color: #33f9ff;
+  margin-left: 10px;
+  background-color: #26a5ff;
   color: black;
+}
+
+.v-textarea {
+  border:     none !important;
+  background: white; /* Has shading image by default */
 }
