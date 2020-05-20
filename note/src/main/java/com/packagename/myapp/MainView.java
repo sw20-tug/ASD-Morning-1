@@ -13,6 +13,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -29,6 +30,7 @@ import org.vaadin.gatanaso.MultiselectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 
 
+import java.awt.*;
 import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -37,6 +39,7 @@ import java.time.ZoneId;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
+import javax.swing.*;
 
 
 import java.util.List;
@@ -68,6 +71,7 @@ public class MainView extends VerticalLayout {
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
         initializeCat(categoryInterface);
+        languageSelect();
         addInput(service, noteInterface, categoryInterface, noteCategoryInterface);
         if(show_unfinished)
         {
@@ -76,6 +80,61 @@ public class MainView extends VerticalLayout {
         else{
             showfinishedNotes(noteInterface, categoryInterface, noteCategoryInterface);
         }
+    }
+    static int language = 0;
+
+    private void languageSelect()
+    {
+        Button button_export = new Button("Export");
+        Button button_import = new Button("Import");
+        button_import.getStyle().set("margin-left", "530px");
+
+    button_export.addClickListener(test ->
+        {
+            try {
+                exportDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        button_import.addClickListener(test ->
+        {
+            try {
+                importDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        HorizontalLayout languages = new HorizontalLayout();
+
+        Button de = new Button("Deutsch");
+        Button en = new Button("English");
+        Button fr = new Button("French");
+
+        de.addClassName("language");
+        en.addClassName("language");
+        fr.addClassName("language");
+
+        languages.add(de, en, fr, button_import, button_export);
+
+        de.addClickListener(event->{
+            language = 0;
+            UI.getCurrent().getPage().reload();
+        });
+        en.addClickListener(event->{
+            language = 1;
+            UI.getCurrent().getPage().reload();
+        });
+        fr.addClickListener(event->{
+            language = 2;
+            UI.getCurrent().getPage().reload();
+        });
+
+        add(languages);
     }
 
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
@@ -102,8 +161,7 @@ public class MainView extends VerticalLayout {
         Div line = new Div();
         line.getStyle().set("width","100%").set("border-top","4px solid grey");
 
-        Button button_export = new Button("Export");
-        Button button_import = new Button("Import");
+
 
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
 
@@ -149,25 +207,6 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        button_export.addClickListener(test ->
-        {
-            try {
-                exportDatabase();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
-
-        button_import.addClickListener(test ->
-        {
-            try {
-                importDatabase();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
         clear_filters.addClickListener(clear_filter_event ->{
             filter_pri.setValue(filter_pri_ = "");
             filter_cat.setValue(filter_cat_ = "");
@@ -433,8 +472,6 @@ public class MainView extends VerticalLayout {
         div_text.getStyle().set("align-items", "center");
         div_text.getStyle().set("justify-content", "center");
 
-        div_buttons.add(button, delete_button, share_button, done);
-        div_buttons.getStyle().set("margin-left", "215px");
 
         Dialog dialog = new Dialog();
         Button save = new Button("Save");
@@ -451,6 +488,10 @@ public class MainView extends VerticalLayout {
 
         Button send_mail = new Button("Send");
         send_mail.addClassName("share_button");
+
+        div_buttons.add(button, delete_button, share_button, done);
+        div_buttons.getStyle().set("margin-left", "215px");
+
 
         Notification notification = new Notification(
                 "Pinned note", 3000);

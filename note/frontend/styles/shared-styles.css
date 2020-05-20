@@ -19,6 +19,11 @@
   color: black;
 }
 
+.language {
+  background-color: white;
+  background-image: url("flags/de.png");
+}
+
 .share_button {
   margin-left: 10px;
   background-color: #26a5ff;
