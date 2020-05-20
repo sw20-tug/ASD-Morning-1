@@ -85,6 +85,7 @@ public class MainView extends VerticalLayout {
         Button clear_filters = new Button("Clear filter");
 
         Button button_export = new Button("Export");
+        Button button_import = new Button("Import");
 
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
 
@@ -142,6 +143,15 @@ public class MainView extends VerticalLayout {
 
         });
 
+        button_import.addClickListener(test ->
+        {
+            try {
+                importDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
         clear_filters.addClickListener(clear_filter_event ->{
             filter_pri.setValue(filter_pri_ = "");
             filter_cat.setValue(filter_cat_ = "");
@@ -184,7 +194,7 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
-        add(textField_filename, textArea, horizont_add_cat_pri, button_save,button_export, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
+        add(textField_filename, textArea, horizont_add_cat_pri, button_save,button_export,button_import, horizont_filter_checkboxes, horizont_filter_comboboxes, filter_buttons);
     }
 
     /**
@@ -649,9 +659,19 @@ public class MainView extends VerticalLayout {
         String dbUser = "root";
         String dbPass = "password";
         String export = "";
-        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export_" + export_counter.toString() + ".sql";
+        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export.sql";
         export_counter++;
         Runtime.getRuntime().exec(export);
+
+    }
+
+    private void importDatabase() throws IOException {
+
+        String dbName = "notedb";
+        String dbUser = "root";
+        String dbPass = "password";
+        String[] importdb = {"/bin/sh" , "-c", "mysql -u" + dbUser+ " -p"+dbPass+" " + dbName + " < export.sql"};
+        Runtime.getRuntime().exec(importdb);
 
     }
 
