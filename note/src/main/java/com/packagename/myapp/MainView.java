@@ -56,8 +56,30 @@ public class MainView extends VerticalLayout {
         PRI_CAT_DATE, PRI_CAT, PRI_DATE, CAT_DATE, PRI, CAT, DATE, NONE, INVALID
     }
 
+    public enum Language{
+        BUTTON_CLEAR(0),
+        BUTTON_EXPORT(1),
+        UNFINISHED(2),
+        FINISHED(3),
+        LABEL_ADD(1000);
+        //LABEL_CLEAR
 
-    static boolean show_unfinished = true;
+        int index;
+
+        Language(int newValue) {
+            index = newValue;
+        }
+
+        public int getIndex()
+        {
+            return index;
+        }
+    }
+
+
+
+
+        static boolean show_unfinished = true;
     static boolean date_ = false;
     static boolean title_ = false;
     static String filter_cat_ = "";
@@ -69,6 +91,7 @@ public class MainView extends VerticalLayout {
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
         initializeCat(categoryInterface);
+        languageSelect();
         addInput(service, noteInterface, categoryInterface, noteCategoryInterface);
         if(show_unfinished)
         {
@@ -79,15 +102,76 @@ public class MainView extends VerticalLayout {
         }
     }
 
+    static int language = 0;
+    //static String [] label_clear = {"Löschen", "Clear", "Effacer"};
+    static String[][] languages = {
+            {"Löschen", "Clear", "Effacer"},
+            {"Exportieren", "Export", "Exportation"},
+            {"Zeige Vollendet", "Show finished", "Spectacle terminé"},
+            {"Zeige Unvollendet", "Show Unfinished", "Afficher inachevé"},
+            {"Sortiere nach Datum", "Sort Date", "Date de tri"},
+            {"Sortiere nach Titel", "Sort Title", "Trier le titre"},
+            {"Kategorien", "Categories", "Les catégories"},
+            {"Datum von", "Date from", "Dater de"},
+            {"Datum bis", "Date until", "Date jusqu'au"},
+            {"Hier schreiben...", "Write here...", "Ecrire ici..."},
+            {"Geben Sie den Namen Ihrer Notiz ein:", "Enter name of your note:", "Entrez le nom de votre note:"},
+            {"Notiz speichern", "Save note", "Enregistrer la note"},
+            {"Filter anwenden", "Apply filter", "Appliquer le filtre"},
+            {"Ändern", "Edit", "Éditer"},
+            {"Löschen", "Delete", "Supprimer"},
+            {"Teilen", "Share", "Partager"},
+            {"Fertig", "Done", "Terminé"},
+            {"Speichern", "Save", "sauver"},
+            {"Teilen mit: (email)", "share with: (email)", "partager avec: (email)"},
+            {"Bitte geben Sie eine gültige E-Mail-Adresse ein.", "Please enter a valid email adress.", "Veuillez saisir une adresse e-mail valide."},
+            {"Senden", "Send", "Envoyer"},
+            {"Schließen", "Close", "proche"},
+            {"Priorität", "Priority", "Priorité"},
+            {"Priorität muss ausgefüllt werden!", "Priority must be filled in!", "La priorité doit être remplie!"},
+            {"Kategorie", "Category", "Catégorie"},
+            {"Kategorien", "Categories", "Les catégories"},
+            {"Kategorie muss ausgefüllt werden!", "Category must be filled in!", "La catégorie doit être remplie!"},
+            {"Schule", "School", "École"},
+            {"Einkaufen", "Shopping", "Achats"},
+            {"Zuhause", "Home", "Accueil"},
+            {"Arbeiten", "Work", "Travail"},
+            {"Training", "Workout", "Faire des exercices"},
+    };
+
+    private void languageSelect()
+    {
+        HorizontalLayout languages = new HorizontalLayout();
+        Button de = new Button("Deutsch");
+        Button en = new Button("English");
+        Button fr = new Button("French");
+        languages.add(de, en, fr);
+
+        de.addClickListener(event->{
+            language = 0;
+            UI.getCurrent().getPage().reload();
+        });
+        en.addClickListener(event->{
+            language = 1;
+            UI.getCurrent().getPage().reload();
+        });
+        fr.addClickListener(event->{
+            language = 2;
+            UI.getCurrent().getPage().reload();
+        });
+        add(languages);
+    }
+
     private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
         Button changeview_button = new Button();
-        Button clear_filters = new Button("Clear filter");
+        Button clear_filters = new Button();
+        clear_filters.setText(languages[Language.BUTTON_CLEAR.getIndex()][language]);
 
-        Button button_export = new Button("Export");
+        Button button_export = new Button();
+        button_export.setText(languages[Language.BUTTON_EXPORT.getIndex()][language]);
 
-        Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
-
+        Checkbox unfinished_finished = new Checkbox((show_unfinished) ? (languages[Language.FINISHED.getIndex()][language]) : (languages[Language.UNFINISHED.getIndex()][language]) );
         Checkbox date = new Checkbox("Sort Date");
         date.setValue(date_);
         Checkbox title = new Checkbox("Sort Title");
