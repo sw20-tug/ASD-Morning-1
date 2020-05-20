@@ -18,6 +18,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
@@ -28,12 +29,16 @@ import org.vaadin.gatanaso.MultiselectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 
 
+import java.io.IOException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import javax.mail.*;
+import javax.mail.internet.*;
 
 
-import java.awt.*;
 import java.util.List;
 
 @Route
@@ -43,6 +48,8 @@ import java.util.List;
         enableInstallPrompt = true)
 @CssImport("./styles/shared-styles.css")
 @CssImport(value = "./styles/vaadin-text-field-styles.css", themeFor = "vaadin-text-field")
+
+
 public class MainView extends VerticalLayout {
 
     enum AppliedFilters{
@@ -56,6 +63,7 @@ public class MainView extends VerticalLayout {
     static String filter_pri_ = "";
     static LocalDate date_from_ = null;
     static LocalDate date_until_ = null;
+    static Integer export_counter = 0;
 
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
@@ -94,6 +102,8 @@ public class MainView extends VerticalLayout {
         Div line = new Div();
         line.getStyle().set("width","100%").set("border-top","4px solid grey");
 
+        Button button_export = new Button("Export");
+        Button button_import = new Button("Import");
 
         Checkbox unfinished_finished = new Checkbox((show_unfinished) ? ("Show finished") : ("Show Unfinished") );
 
@@ -139,6 +149,25 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+        button_export.addClickListener(test ->
+        {
+            try {
+                exportDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        button_import.addClickListener(test ->
+        {
+            try {
+                importDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
         clear_filters.addClickListener(clear_filter_event ->{
             filter_pri.setValue(filter_pri_ = "");
             filter_cat.setValue(filter_cat_ = "");
@@ -416,6 +445,13 @@ public class MainView extends VerticalLayout {
         textArea.setHeight("450px");
         textArea.setWidth("1000px");
 
+        EmailField emailField = new EmailField("share with: (email)");
+        emailField.setClearButtonVisible(true);
+        emailField.setErrorMessage("Please enter a valid email adress.");
+
+        Button send_mail = new Button("Send");
+        send_mail.addClassName("share_button");
+
         Notification notification = new Notification(
                 "Pinned note", 3000);
 
@@ -425,6 +461,8 @@ public class MainView extends VerticalLayout {
             notification.open();
             UI.getCurrent().getPage().reload();
         });
+
+
 
         done.setValue(note.getDone_());
         done.addClickListener(event -> {
@@ -465,10 +503,26 @@ public class MainView extends VerticalLayout {
             UI.getCurrent().getPage().reload();
         });
 
+        share_button.addClickListener(event -> {
+            dialog.open();
+            dialog.setWidth("500px");
+            dialog.setHeight("250px");
+            dialog.add(emailField);
+            HorizontalLayout horizont = new HorizontalLayout();
+
+            horizont.add(send_mail);
+            dialog.add(horizont);
+
+            send_mail.addClickListener(eventSave -> {
+                sendEmail(emailField, note, noteCategoryInterface, categoryInterface);
+
+                UI.getCurrent().getPage().reload();
+
+            });
+
+        });
         add(div_text, div_buttons);
     }
-
-
 
     public Note saveToDatabase(String filename, String text, Integer priority, NoteInterface notes)
     {
@@ -629,6 +683,82 @@ public class MainView extends VerticalLayout {
             });
         }
     }
+    public void sendEmail(EmailField emailField, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        String from = "asdmorning1.2020@gmail.com";
+        String password = "ASDmorning1!";
+        String smtp = "smtp.gmail.com";
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", smtp);
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.port", "587");
+        Session session = Session.getInstance(properties,  new JAuthenticator(properties, new PasswordAuthentication(from, password)));
+        MimeMessage message = new MimeMessage(session);
+        try {
+            message.setFrom(new InternetAddress(from));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(emailField.getValue()));
+            setFormattedMessageContent(message, note, noteCategoryInterface, categoryInterface);
+            Transport sending = session.getTransport("smtp");
+            sending.connect(smtp, from, password);
+            sending.sendMessage(message, message.getAllRecipients());
+        }
+        catch(Exception exception) { exception.printStackTrace(); }
+    }
+    private void exportDatabase() throws IOException {
+
+        String dbName = "notedb";
+        String dbUser = "root";
+        String dbPass = "password";
+        String export = "";
+        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export.sql";
+        export_counter++;
+        Runtime.getRuntime().exec(export);
+
+    }
+
+    private void importDatabase() throws IOException {
+
+        String dbName = "notedb";
+        String dbUser = "root";
+        String dbPass = "password";
+        String[] importdb = {"/bin/sh" , "-c", "mysql -u" + dbUser+ " -p"+dbPass+" " + dbName + " < export.sql"};
+        Runtime.getRuntime().exec(importdb);
+
+    }
+
+    public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    {
+        Set<String> cats = fillCategories(note.getId_(), noteCategoryInterface, categoryInterface);
+        String msg = "        <html>\n" +
+                "<head>\n" +
+                "\t<title></title>\n" +
+                "</head>\n" +
+                "<body>A user shared his note with you:\n\n" +
+                "<h1><span style=\"font-size:14px\"><strong></h1>Note Title: </strong></span><span style=\"font-size:14\">"
+                + note.getTitle_() + "</strong></span>\n" +
+                "<h1><span style=\"font-size:14px\">Note: </span></h1>\n" +
+                "<blockquote>\n" +
+                "<p><span style=\"font-size:14px\">"+ note.getText_() +"</span><br />\n&nbsp;</p>\n" +
+                "</blockquote>\n" +
+                "<p><span style=\"font-size:14px\"><strong>Priority: </strong>" +note.getPriority()+"<br />\n" +
+                "<br />\n" +
+                "<br />\n" +
+                "<strong>Categories: </strong>"+cats.toString().substring(1, (cats.toString()).length()-1)+
+                "</span><br />\n" +
+                "<br />\n" +
+                "            Kind regards<br />\n" +
+                "        Your ASD-Morning-1 develop team</p>\n" +
+                "\n" +
+                "<blockquote>\n" +
+                "<h1>&nbsp;</h1>\n" +
+                "</blockquote>\n" +
+                "</body>\n" +
+                "</html>";
+        try {message.setContent(msg, "text/html"); message.setSubject(note.getTitle_()); }
+        catch(Exception e) {e.printStackTrace();}
+    }
+
 
 
 }
