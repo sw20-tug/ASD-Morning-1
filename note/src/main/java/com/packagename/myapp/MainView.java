@@ -91,7 +91,6 @@ public class MainView extends VerticalLayout {
     static String filter_pri_ = "";
     static LocalDate date_from_ = null;
     static LocalDate date_until_ = null;
-    static Integer export_counter = 0;
 
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
@@ -114,10 +113,13 @@ public class MainView extends VerticalLayout {
         Button button_import = new Button(languages[Language.IMPORT.getIndex()][language]);
         button_import.getStyle().set("margin-left", "530px");
 
+        ExportImport export_import_instance = new ExportImport();
+
+
     button_export.addClickListener(test ->
         {
             try {
-                exportDatabase();
+                export_import_instance.exportDatabase();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -127,7 +129,7 @@ public class MainView extends VerticalLayout {
         button_import.addClickListener(test ->
         {
             try {
-                importDatabase();
+                export_import_instance.importDatabase();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -813,27 +815,7 @@ public class MainView extends VerticalLayout {
         }
         catch(Exception exception) { exception.printStackTrace(); }
     }
-    private void exportDatabase() throws IOException {
 
-        String dbName = "notedb";
-        String dbUser = "root";
-        String dbPass = "password";
-        String export = "";
-        export = "mysqldump -u "+dbUser+" -p"+dbPass+" "+dbName+" -r export.sql";
-        export_counter++;
-        Runtime.getRuntime().exec(export);
-
-    }
-
-    private void importDatabase() throws IOException {
-
-        String dbName = "notedb";
-        String dbUser = "root";
-        String dbPass = "password";
-        String[] importdb = {"/bin/sh" , "-c", "mysql -u" + dbUser+ " -p"+dbPass+" " + dbName + " < export.sql"};
-        Runtime.getRuntime().exec(importdb);
-
-    }
 
     public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
     {
