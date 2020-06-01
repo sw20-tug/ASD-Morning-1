@@ -33,6 +33,7 @@ import java.time.LocalDate;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
+import javax.validation.constraints.Email;
 
 
 import java.util.List;
@@ -85,6 +86,7 @@ public class MainView extends VerticalLayout {
     static String filter_pri_ = "";
     static LocalDate date_from_ = null;
     static LocalDate date_until_ = null;
+    static EmailService mailing_service = new EmailService();
 
     public MainView(@Autowired PushNotification service, @Autowired NoteInterface noteInterface, @Autowired CategoryInterface categoryInterface, @Autowired NoteCategoryInterface noteCategoryInterface) {
         initializeCat(categoryInterface);
@@ -694,60 +696,30 @@ public class MainView extends VerticalLayout {
             });
         }
     }
-    public void sendEmail(EmailField emailField, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    public boolean sendEmail(EmailField emailField, Note note, NoteCategoryInterface noteCategoryInterface,
+                          CategoryInterface categoryInterface)
     {
-        String from = "asdmorning1.2020@gmail.com";
-        String password = "ASDmorning1!";
-        String smtp = "smtp.gmail.com";
-        Properties properties = new Properties();
-        properties.put("mail.smtp.host", smtp);
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.starttls.enable", "true");
-        properties.put("mail.smtp.port", "587");
-        Session session = Session.getInstance(properties,  new JAuthenticator(properties, new PasswordAuthentication(from, password)));
+        Session session = mailing_service.getSession();
         MimeMessage message = new MimeMessage(session);
         try {
-            message.setFrom(new InternetAddress(from));
+            message.setFrom(new InternetAddress(mailing_service.getFrom_()));
             message.setRecipient(Message.RecipientType.TO, new InternetAddress(emailField.getValue()));
             setFormattedMessageContent(message, note, noteCategoryInterface, categoryInterface);
             Transport sending = session.getTransport("smtp");
-            sending.connect(smtp, from, password);
+            sending.connect(mailing_service.getSmtp_(), mailing_service.getFrom_(), mailing_service.getPassword_());
             sending.sendMessage(message, message.getAllRecipients());
+            return true;
         }
         catch(Exception exception) { exception.printStackTrace(); }
+        return false;
     }
 
 
-    public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface, CategoryInterface categoryInterface)
+    public void setFormattedMessageContent(MimeMessage message, Note note, NoteCategoryInterface noteCategoryInterface,
+                                           CategoryInterface categoryInterface)
     {
         Set<String> cats = fillCategories(note.getId_(), noteCategoryInterface, categoryInterface);
-        String msg = "        <html>\n" +
-                "<head>\n" +
-                "\t<title></title>\n" +
-                "</head>\n" +
-                "<body>A user shared his note with you:\n\n" +
-                "<h1><span style=\"font-size:14px\"><strong></h1>Note Title: </strong></span><span style=\"font-size:14\">"
-                + note.getTitle_() + "</strong></span>\n" +
-                "<h1><span style=\"font-size:14px\">Note: </span></h1>\n" +
-                "<blockquote>\n" +
-                "<p><span style=\"font-size:14px\">"+ note.getText_() +"</span><br />\n&nbsp;</p>\n" +
-                "</blockquote>\n" +
-                "<p><span style=\"font-size:14px\"><strong>Priority: </strong>" +note.getPriority()+"<br />\n" +
-                "<br />\n" +
-                "<br />\n" +
-                "<strong>Categories: </strong>"+cats.toString().substring(1, (cats.toString()).length()-1)+
-                "</span><br />\n" +
-                "<br />\n" +
-                "            Kind regards<br />\n" +
-                "        Your ASD-Morning-1 develop team</p>\n" +
-                "\n" +
-                "<blockquote>\n" +
-                "<h1>&nbsp;</h1>\n" +
-                "</blockquote>\n" +
-                "</body>\n" +
-                "</html>";
-        try {message.setContent(msg, "text/html"); message.setSubject(note.getTitle_()); }
-        catch(Exception e) {e.printStackTrace();}
+        mailing_service.setFormattedMessageContent(cats, message, note);
     }
 
 
