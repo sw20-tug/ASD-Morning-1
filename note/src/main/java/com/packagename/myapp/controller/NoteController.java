@@ -15,7 +15,7 @@ import java.util.List;
 
 
 @RestController
-public class NoteController {
+public class NoteController{
 
     @Autowired
     NoteInterface noteInterface;

@@ -185,10 +185,10 @@ public class MainView extends VerticalLayout {
         filter_cat.setItems(getCategories(categoryInterface));
         filter_cat.setValue(filter_cat_);
 
-        DatePicker filter_date_from = new  DatePicker(LanguageSelect.languages[LanguageSelect.Language.DATE_FROM.getIndex()][language]);
+        DatePicker filter_date_from = new DatePicker(LanguageSelect.languages[LanguageSelect.Language.DATE_FROM.getIndex()][language]);
         filter_date_from.setValue(date_from_);
 
-        DatePicker filter_date_until = new  DatePicker(LanguageSelect.languages[LanguageSelect.Language.DATE_UNTIL.getIndex()][language]);
+        DatePicker filter_date_until = new DatePicker(LanguageSelect.languages[LanguageSelect.Language.DATE_UNTIL.getIndex()][language]);
         filter_date_until.setValue(date_until_);
 
         unfinished_finished.setValue(!show_unfinished);
