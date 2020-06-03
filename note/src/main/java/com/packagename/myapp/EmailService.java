@@ -5,6 +5,7 @@ import com.packagename.myapp.entity.Note;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import javax.persistence.PersistenceContext;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -21,6 +22,7 @@ public class EmailService {
         properties_.put("mail.smtp.auth", "true");
         properties_.put("mail.smtp.starttls.enable", "true");
         properties_.put("mail.smtp.port", "587");
+        instance = this;
     }
 
     public void setFormattedMessageContent(Set<String> cats, MimeMessage message, Note note)
@@ -29,7 +31,7 @@ public class EmailService {
         if(cats == null)
         {
             cats_ = new HashSet<>();
-            cats_.add("  ");
+            cats_.add("");
         }
         else
             cats_ = cats;
@@ -54,7 +56,6 @@ public class EmailService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public String composeMessage(Set<String> cats,Note note)
@@ -107,5 +108,8 @@ public class EmailService {
     String password_;
     String smtp_;
     Properties properties_;
+
+    @PersistenceContext
+    private EmailService instance;
 
 }

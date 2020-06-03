@@ -2,12 +2,10 @@ package com.packagename.myapp;
 
 
 import com.packagename.myapp.entity.Note;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Set;
@@ -37,10 +35,14 @@ public class SortAndFilter {
     }
 
     static public void clearFiltering(ComboBox<String> filter_pri, ComboBox<String> filter_cat){
-        if(filter_pri != null ) filter_pri.setValue(filter_pri_ = "");
-        if(filter_cat != null) filter_cat.setValue(filter_cat_ = "");
+        if(filter_pri == null) filter_pri_ = "";
+        else  filter_pri.setValue(filter_pri_ = "");
+
+        if(filter_cat == null) filter_cat_ = "";
+        else filter_cat.setValue(filter_cat_ = "");
+
         show_unfinished = true;
-        date_ =  title_= false;
+        date_ = title_= false;
         date_until_ = date_from_ = null;
     }
 
@@ -58,12 +60,17 @@ public class SortAndFilter {
 
     static public Boolean checkDate(Note note)
     {
+        if(date_from_ == null || date_until_ == null)
+            return false;
         return (note.getCreated().after( Date.from(date_from_.atStartOfDay(ZoneId.systemDefault()).toInstant()) ) &&
                 note.getCreated().before(Date.from(date_until_.atStartOfDay(ZoneId.systemDefault()).toInstant())));
     }
 
     static public Boolean checkCategory(Set<String> categories_to_id)
     {
+        if(categories_to_id == null)
+            return false;
+
         if(filter_cat_.isEmpty())
             return false;
 
@@ -74,6 +81,4 @@ public class SortAndFilter {
         }
         return false;
     }
-
-
 }
