@@ -30,6 +30,7 @@ public class Tags {
         {
             if(notecat_iterator.getFk_note().equals(note_id))
             {
+
                 for(Category cat : cat_entries)
                     if(cat.getId_().equals(notecat_iterator.getFk_category()))
                     {
@@ -38,6 +39,7 @@ public class Tags {
                     }
             }
         }
+
         return categories;
     }
 
