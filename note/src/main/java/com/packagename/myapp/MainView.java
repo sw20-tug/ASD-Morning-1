@@ -79,7 +79,7 @@ public class MainView extends VerticalLayout {
         }
     }
 
-    private void selectExportImport(HorizontalLayout top_layout)
+    public void selectExportImport(HorizontalLayout top_layout)
     {
         Button button_export = new Button(LanguageSelect.languages[LanguageSelect.Language.EXPORT.getIndex()][language]);
         Button button_import = new Button(LanguageSelect.languages[LanguageSelect.Language.IMPORT.getIndex()][language]);
@@ -114,7 +114,7 @@ public class MainView extends VerticalLayout {
         add(top_layout);
     }
 
-    private HorizontalLayout languageSelect()
+    public HorizontalLayout languageSelect()
     {
         HorizontalLayout top_layout = new HorizontalLayout();
 
@@ -144,7 +144,7 @@ public class MainView extends VerticalLayout {
         return top_layout;
     }
 
-    private void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+    public void addInput(PushNotification service, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         // Use TextField for standard text input
         Button changeview_button = new Button();
         Button clear_filters = new Button();
@@ -270,7 +270,7 @@ public class MainView extends VerticalLayout {
     /**
      * Loads the List with all notes.
      */
-    private void showunfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+    public void showunfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
 
         List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
         ArrayList<Integer> pinned_notes = new ArrayList<>();
@@ -299,7 +299,7 @@ public class MainView extends VerticalLayout {
         });
     }
 
-    private void showfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+    public void showfinishedNotes(NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
 
         List<Note> notes = noteInterface.findAll(Sort.by(Sort.Direction.DESC, "pinned"));
         ArrayList<Integer> pinned_notes = new ArrayList<>();
@@ -328,7 +328,7 @@ public class MainView extends VerticalLayout {
     }
 
 
-    private void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface,
+    public void applyFilter(Note note, NoteInterface noteInterface, NoteCategoryInterface noteCategoryInterface,
                                CategoryInterface categoryInterface, AppliedFilters filter)
     {
         switch(filter)
@@ -378,7 +378,7 @@ public class MainView extends VerticalLayout {
 
     }
 
-    private void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
+    public void Note(Note note, NoteInterface noteInterface, CategoryInterface categoryInterface, NoteCategoryInterface noteCategoryInterface) {
         Div div_text = new Div();
         Div div_buttons = new Div();
 
@@ -627,7 +627,7 @@ public class MainView extends VerticalLayout {
         return category;
     }
 
-    private void initializeCat(CategoryInterface categoryInterface)
+    public void initializeCat(CategoryInterface categoryInterface)
     {
         if(categoryInterface.findAll().isEmpty())
         {
